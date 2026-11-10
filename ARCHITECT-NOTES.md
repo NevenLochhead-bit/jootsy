@@ -2,11 +2,11 @@
 
 ## Current focus
 
-- **State (Tue Nov 10, 10:00 ET):** v4 core is live (`19fdf3b`). **Neven has said GO on v4** ("go! yes I hear it — perfect"). Class runs on v4; the v3 rollback is now only for an emergency. The commit sound is confirmed by him. **Spec v4.1** is issued: `docs/JOOTSY_TUESDAY_SPEC.md` §17, branch `architect`.
-- **Next to act: Engineer.** §17 in order: A (words, order, removals), B (join screen), then C (sound on cards), then D (light on the wires, Refresh scan). Deploy A+B together as soon as they pass §17.E. **4 deploys left; last deploy 11:45 ET; nothing after 12:00.**
-- **Lanes:** Neven's graphic design notes go to the Engineer directly. Defects go to the Engineer directly. Anything that changes what a player can do or read comes through me.
-- **Next to act: Neven.** Keep playing; try a phone if he can.
-- **No-go path** (unchanged): republish v3 and run the cleanup SQL in `V4-REPORT.md`.
+- **State (Tue Nov 10, 10:15 ET):** **v4.1 A+B is live** (`main` runtime `f2e317e`, published 10:01; deploy 5 of 8). Words, order, removals and the new join screen are in. I have reviewed the join code: correct. Class runs on v4 (Designer GO, 09:42).
+- **Next to act: Engineer.** §17.C (image + sound; Safari playback is the gate, drop sound if not solid by 11:30), then §17.D (light on the wires, Refresh scan). **3 deploys left; last deploy 11:45 ET; nothing after 12:00.**
+- **Next to act: Neven.** Reload and check the new wording and join screen in the sandbox; try a phone. Graphic design notes go to the Engineer directly.
+- **Student manual:** written to the v4.1 wording on his Notion page "Jootsy!" (Deck Cards). It mentions sound; cut that line if §17.C ships without sound.
+- **Emergency fallback only:** republish v3 and run the cleanup SQL in `V4-REPORT.md`.
 
 ## Where things are
 
@@ -83,6 +83,16 @@ Open, none needed before class:
 - "Describe an image" (§15.7), not built on Tuesday.
 - Each student's branch as an export for the game review.
 - Edge buttons, if he wants them.
+
+## Review 4 — Tue Nov 10, 10:15 ET (of v4.1 A+B at `main` `41a75d3`, runtime `f2e317e`)
+
+**Reviewed:** `ENGINEER-HANDOFF.md` and the `join` route in `netlify/functions/api.mjs`. The rest of A+B is client wording and layout, which I accept on the Engineer's browser evidence.
+
+- `mode` is required. `new` refuses an existing name (and the reserved instructor name). `returning` refuses an unknown name and **never creates a player**, except the instructor's first sign-in, which still requires the instructor passcode. Wrong passcode is refused. Names are trimmed, inner spaces collapsed, case-insensitive. Correct.
+- The Engineer kept "Name" for the player's own name and the scenario's name, and uses "Choice" only for the card field. That is the right reading of §17.A.1.
+- Not tested by anyone: a real screen reader's speech (roles and live regions are in place), and a physical phone.
+
+No findings.
 
 ## Review 3 — Tue Nov 10, 09:40 ET (of v4 core at `main` `7a4ea14`, runtime `19fdf3b`)
 
@@ -167,6 +177,8 @@ None open.
 ## Handoff log
 
 Newest first. Each entry: commit or file, what is ready, who acts next. (Entries I logged earlier tonight carried times about an hour fast; the times below are from the commits.)
+
+- **Nov 10, 10:15 ET — Architect.** `ARCHITECT-NOTES.md` § "Review 4": v4.1 A+B at `f2e317e` reviewed (join route); no findings. Student manual written to Neven's Notion page "Jootsy!". **Next: Engineer** — §17.C, then §17.D; 3 deploys left.
 
 - **Nov 10, 10:00 ET — Architect.** `ARCHITECT-NOTES.md`: Designer **GO on v4** recorded; commit sound confirmed. Tier 2 is released. **Next: Engineer** — §17 (v4.1) A+B, then C, then D; 4 deploys left; last deploy 11:45 ET.
 
