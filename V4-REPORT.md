@@ -1,18 +1,18 @@
 # v4 core — deployed for the Designer walkthrough
 
-The v4 core from Architect `1eac13a`, spec §16, is live. Latest runtime: **`6d927bace8eee3f5ab7a57e127d7dbe527932dfc`**, PR #5, Netlify deploy **`6af324baa9466af970bf7294`**, published **09:06:06 ET, 10 November 2026**. Reload any tab that was open on v3 or an earlier v4 release.
+The v4 core from Architect `1eac13a`, spec §16, is live. Latest runtime: **`19fdf3bc8b82d5f8037ecfebfba5915a7d459dfc`**, PR #6, Netlify deploy **`6af3268063a573f7d7b15ea2`**, published **09:13:35 ET, 10 November 2026**. Reload any tab that was open on v3 or an earlier v4 release.
 
 - Class: https://jootsy.netlify.app/mdst1050
 - Review/QA: https://jootsy.netlify.app/sandbox
 - Legacy fixture: https://jootsy.netlify.app/stress
 - Infrastructure: existing claimed Netlify Postgres, Netlify Blobs `jootsy-images`, Netlify **Pro** team (`nf_team_pro`, verified through the site API). No database retention/setup click is outstanding.
 - Instructor identity is **Neven**. The existing `INSTRUCTOR_PASSCODE` and independent `TOKEN_SECRET` remain Functions-scoped; the passcode is supplied privately in chat, never this public repo.
-- **Three v4 publications used; the final permitted publication fixes sparse Players-dock alignment found during the class-entry check.** Transport and documentation commits skip Netlify; branch/preview deploys remain disabled. The runtime ignore rule is a second guard for documentation-only expansion commits.
+- **All four permitted v4 production publications are used.** The last corrects sparse Players-dock alignment, verified in the live class world. A further Tier 2 release would need an explicit Designer revision to that budget. Transport and documentation commits skip Netlify; branch/preview deploys remain disabled. The runtime ignore rule is a second guard for documentation-only expansion commits.
 - **Tier 2 has not started.** Neven tests 10:30–11:00 ET and gives go/no-go at 11:00. Architect reviews the core evidence below. No deployment after noon; any approved final polish deploy must finish by 11:45.
 
 ## Verification
 
-No functional failure remains observed. The sparse dock alignment correction is queued for the fourth and final permitted publication. §16.8 checks 2–14 pass using the evidence below. Check 1's complete desktop game loop passes; **sound quality/audibility still needs Neven's listening check**. **Physical-phone touch/pinch and performance remain unverified** (retained §12 item 17); the 360×800 layout was checked in Chrome, which does not constitute a real-phone test.
+No functional failure remains observed. The final class-entry check confirms the sparse Players table now stays at the top of the dock; the class world has seven scenarios and zero played cards. §16.8 checks 2–14 pass using the evidence below. Check 1's complete desktop game loop passes; **sound quality/audibility still needs Neven's listening check**. **Physical-phone touch/pinch and performance remain unverified** (retained §12 item 17); the 360×800 layout was checked in Chrome, which does not constitute a real-phone test.
 
 | §16.8 | Result and evidence |
 | --- | --- |
@@ -33,7 +33,7 @@ No functional failure remains observed. The sparse dock alignment correction is 
 
 The published `/checks.html` sandbox API suite passed every v4 assertion. Source expansion and Transaction checks pass syntax, media/identity client checks, disposable Postgres migration/ownership/session/concurrency checks, stress geometry and build. Concurrency evidence covers ten simultaneous independent sessions/commits and a same-cell write race; this is not a claim of a 33-device physical load test. Chrome reports extension-origin errors in its own extensions; no Jootsy app error was observed in the walkthrough.
 
-Evidence images: [desktop editor](docs/verification/v4-editor.jpg), [committed Board](docs/verification/v4-board.jpg). QA content was created only in `sandbox`; stress was read-only.
+Evidence images: [desktop editor](docs/verification/v4-editor.jpg), [committed Board](docs/verification/v4-board.jpg), [class entry](docs/verification/v4-class.jpg), [360px class Board](docs/verification/v4-phone.jpg). QA content was created only in `sandbox`; stress was read-only.
 
 ## Decisions made without blocking
 
