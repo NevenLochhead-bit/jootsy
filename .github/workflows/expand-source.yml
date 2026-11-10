@@ -28,6 +28,15 @@ jobs:
       TOKEN_SECRET: disposable_ci_signing_key_only_0123456789abcdef
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Sync verified release base
+        if: github.ref_name == 'engineer-v3'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git merge origin/main -X ours -m "[skip netlify] Sync main for verified core release"
       - name: Expand reviewed local source
         run: tar -xzf source.tar.gz --exclude="._*"
       - uses: actions/setup-node@v4
@@ -44,5 +53,6 @@ jobs:
           git add .
           if ! git diff --cached --quiet; then
             git commit -m "Expand verified Jootsy source bundle"
-            git push
           fi
+          git push
+
