@@ -22,7 +22,7 @@ window.openMap=(id,options={})=>{
  function centre(cardId){const node=nodes.find(n=>n.id===cardId);if(node){k=.85;tx=W/2-node.x*k;ty=H/2-node.y*k;focus=cardId;}else fit();draw();}
  function fit(){const max=Math.max(...nodes.map(n=>n.radius),240);k=Math.max(.0001,Math.min((W-60)/(2*max),(H-180)/(2*max)));tx=W/2;ty=H/2+20;draw();}
  function update(){const next=layout(cards(),[...S.paths.values()]);old=new Map(nodes.map(n=>[n.id,n]));nodes=next.nodes;factor=next.factor;animation=performance.now();if(!raf)raf=requestAnimationFrame(animate);updatePicker();}
- function updatePicker(){playerList.replaceChildren(...[...S.players.values()].map(p=>({...p,count:cards().filter(c=>c.author_id===p.id).length})).sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name)).map(p=>btn(`${p.name} · ${p.count}`,()=>setFilter(filter===p.id?'':p.id),filter===p.id?'active':'',{'aria-pressed':filter===p.id})));}
+ function updatePicker(){playerList.replaceChildren(...[...S.players.values()].map(p=>({...p,count:cards().filter(c=>c.author_id===p.id).length})).sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name)).map(p=>btn(`${p.name} · ${p.count}`,()=>setFilter(filter===p.id?'':p.id),filter===p.id?'active':'',{'aria-pressed':String(filter===p.id)})));}
  function setFilter(value){filter=value;updatePicker();draw();}
  const rect=n=>n.card?.type==='scenario'?[40,56]:[20,28];
  const at=(n,t)=>{const previous=old.get(n.id);return previous?{...n,x:previous.x+(n.x-previous.x)*t,y:previous.y+(n.y-previous.y)*t}:n;};
