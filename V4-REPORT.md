@@ -1,10 +1,12 @@
 # v4 core — verification in progress
 
-Scope: spec §16 at Architect `1eac13a`. Core target 10:30 ET, 10 November 2026. Tier 2 is held until Neven explicitly gives go. Production deploy budget: four; zero v4 publications at this checkpoint.
+Scope: spec §16 at Architect `1eac13a`. Core target 10:30 ET, 10 November 2026. Tier 2 is held until Neven explicitly gives go. Production deploy budget: four; one v4 publication at this checkpoint.
 
 - Class: https://jootsy.netlify.app/mdst1050 . QA only: https://jootsy.netlify.app/sandbox . Legacy stress: https://jootsy.netlify.app/stress .
 - Existing claimed Netlify Postgres and Netlify Blobs `jootsy-images`; Pro team. Existing instructor environment and independent token signing environment retained. Credentials stay out of this public repository.
-- CI source expansion #18 passed against disposable Postgres. Browser acceptance is pending deployment; no claim of complete acceptance yet.
+- First core publication: `12701f253531021b16de747dee957ca70b660c93` / PR #3 / Netlify deploy `6af31ef1800d66c56af5c8de`, 08:41:25 ET. The v4 migration is reported applied. Source expansion #18–21 and Transaction checks #23–24 passed, including the 300-card legacy stress geometry.
+- Live sandbox: a new player made Fork + Destiny, wrote three named cards, recovered all three after reload and on the independent in-app browser, changed Fork to Destiny and back via Undo, changed Destiny to Dream and back, expanded a one-card transition to Fork and undid it. Before Commit the independent observer counted zero cards; after Commit it counted all three in **994 ms**, with `commit-flash` applied to the player row. Stage-three controls show the exact required Commit message.
+- Browser review found desktop stage clipping and an extra native file input. A core layout/accessibility correction is being prepared; acceptance is still in progress.
 - Sessions and draft columns are additive. Migration normalizes dead ends, retires unwritten paths, and enables Jootsy at five committed cards. No scenario or committed fragment is deleted.
 
 ## Implementation decisions
