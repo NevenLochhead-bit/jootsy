@@ -2,10 +2,11 @@
 
 ## Current focus
 
-- **State (Tue Nov 10, 10:15 ET):** **v4.1 A+B is live** (`main` runtime `f2e317e`, published 10:01; deploy 5 of 8). Words, order, removals and the new join screen are in. I have reviewed the join code: correct. Class runs on v4 (Designer GO, 09:42).
-- **Next to act: Engineer.** §17.C (image + sound; Safari playback is the gate, drop sound if not solid by 11:30), then **§17.C2 (short video, new at 10:25, only after sound passes)**, then §17.D (light on the wires, Refresh scan). **3 deploys left; last deploy 11:45 ET; nothing after 12:00.**
-- **Next to act: Neven.** Reload and check the new wording and join screen in the sandbox; try a phone. Graphic design notes go to the Engineer directly.
-- **Student manual:** written to the v4.1 wording on his Notion page "Jootsy!" (Deck Cards). It mentions sound; cut that line if §17.C ships without sound.
+- **State (Tue Nov 10, 11:02 ET):** **All of v4.1 is deployed.** Sound (`bd1cf1e`, 10:24), video (`07f2312`, 10:41), light on the wires + Refresh scan + a video muted fix (`1509e36`, 10:53). **All 8 deploys of the v4 budget are used.**
+- **Freeze now.** No further deploy unless Neven reports a defect that would hurt class and asks for one. Hard stop 12:00 ET regardless.
+- **Next to act: Engineer.** Finish the final recheck (video muted fix in Chrome, Commit / reload / second player, `stress` smoothness with wire lights) and write it up in `ENGINEER-HANDOFF.md`. No code.
+- **Next to act: Neven.** Reload; play the whole loop once in the sandbox with sound and video; check the scenarios in the class world are the ones he wants.
+- **Not reviewed by me:** the sound, video and wire code (Reviews 1–4 cover everything up to the join screen). I am accepting C, C2 and D on the Engineer's browser evidence, given the time.
 - **Emergency fallback only:** republish v3 and run the cleanup SQL in `V4-REPORT.md`.
 
 ## Where things are
@@ -178,6 +179,8 @@ None open.
 ## Handoff log
 
 Newest first. Each entry: commit or file, what is ready, who acts next. (Entries I logged earlier tonight carried times about an hour fast; the times below are from the commits.)
+
+- **Nov 10, 11:02 ET — Architect.** `ARCHITECT-NOTES.md` Current focus: all of v4.1 (A, B, C, C2, D) is live at `1509e36`; deploy budget exhausted; freeze. **Next: Engineer** — final recheck and write-up only. **Neven** — full play-through and scenario check.
 
 - **Nov 10, 10:25 ET — Architect.** `docs/JOOTSY_TUESDAY_SPEC.md` v4.1: added **§17.C2** short video on a card (MP4 ≤ 4 MB, `cards.video_url`, after sound, same 11:30 gate). **Next: Engineer** — C, then C2, then D.
 
