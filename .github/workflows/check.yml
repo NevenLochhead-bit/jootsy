@@ -1,0 +1,33 @@
+name: Transaction checks
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["netlify/**", "public/**", "scripts/**", "package.json", ".github/workflows/check.yml"]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: jootsy_test
+          POSTGRES_PASSWORD: disposable_ci_only
+          POSTGRES_DB: jootsy_test
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      NETLIFY_DB_URL: postgres://jootsy_test:disposable_ci_only@localhost:5432/jootsy_test
+      CI_TEST_DATABASE: "true"
+      INSTRUCTOR_PASSCODE: disposable_ci_only
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm install
+      - run: npm run check
+      - run: node scripts/api-checks.mjs
+      - run: npm run build
