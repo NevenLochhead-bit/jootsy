@@ -1,0 +1,12 @@
+import {strict as assert} from 'node:assert';
+globalThis.window={Jootsy:{S:{world:null},e:(tag,attrs,...children)=>({tag,attrs,children})}};
+await import('../public/extras.js');
+const render=url=>window.renderMedia({media_kind:'embed',media_url:url});
+assert.equal(render('https://www.youtube.com/watch?v=dQw4w9WgXcQ').attrs.src,'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ');
+assert.equal(render('https://youtu.be/dQw4w9WgXcQ').tag,'iframe');
+assert.equal(render('https://vimeo.com/89239594').attrs.src,'https://player.vimeo.com/video/89239594');
+assert.equal(render('https://soundcloud.com/test/track').tag,'iframe');
+for(const [extension,tag]of [['jpg','img'],['png','img'],['mp3','audio'],['wav','audio'],['mp4','video'],['webm','video']])assert.equal(render(`https://example.com/media.${extension}`).tag,tag);
+assert.equal(render('https://example.com/page').tag,'a');assert.equal(render('https://www.youtube.com/watch?v=invalid').tag,'a');assert.equal(render('javascript:alert(1)'),null);assert.equal(render('http://example.com/file.jpg'),null);
+assert.equal(window.backStyle('Alice'),window.backStyle('ALICE'));assert.notEqual(window.backStyle('Alice'),window.backStyle('Bob'));
+console.log('PASS: supported embeds; native image/audio/video selection; plain link fallback; unsafe protocol rejection; deterministic identity backs.');

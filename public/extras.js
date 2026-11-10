@@ -50,7 +50,7 @@ window.pathSlot=(p,tile)=>{
 };
 window.cardTools=c=>{
  const row=e('div',{class:'tools'});
- if(c.author_id===S.player.id){row.append(btn('Edit',()=>editCard(c)));if(!paths(c.id).some(p=>p.to_card_id))row.append(btn('Delete',()=>confirmDelete(c)));if(['fork','dream'].includes(c.type)&&paths(c.id).length<6)row.append(btn('＋ Deal a path',()=>labelDialog('Deal a face-down path','',label=>api(`cards/${c.id}/paths`,'POST',{label}))));}
+ if(c.author_id===S.player.id){if(!c.hidden||S.player.is_instructor)row.append(btn('Edit',()=>editCard(c)));if(!paths(c.id).some(p=>p.to_card_id))row.append(btn('Delete',()=>confirmDelete(c)));if(['fork','dream'].includes(c.type)&&paths(c.id).length<6)row.append(btn('＋ Deal a path',()=>labelDialog('Deal a face-down path','',label=>api(`cards/${c.id}/paths`,'POST',{label}))));}
  if(S.player.is_instructor)row.append(btn(c.hidden?'Unhide':'Hide',async()=>{try{await api(`cards/${c.id}/hide`,'POST',{value:!c.hidden});await refresh();toast(c.hidden?'Card is visible again.':'Card hidden. Its paths remain open.');}catch(err){toast(err.message);}}));
  return row;
 };

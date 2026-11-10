@@ -56,7 +56,7 @@ export default async function handler(req){
    const p=await auth(c,w,req);const n=Number(url.searchParams.get('since')||0);if(!Number.isSafeInteger(n)||n<0)fail(400,'revision','That revision is not valid.');const since=n>Number(w.rev)?0:n;
    const cards=(await c.query('SELECT * FROM cards WHERE world_id=$1 AND rev>$2 ORDER BY seq',[w.id,since])).rows.map(a=>a.hidden&&!p.is_instructor?{...a,body:'Hidden by the instructor',media_kind:null,media_url:null,door_label:null,target_card_id:null}:a);
    const paths=(await c.query('SELECT * FROM paths WHERE world_id=$1 AND rev>$2 ORDER BY position',[w.id,since])).rows;
-   const players=(await c.query('SELECT id,name,is_instructor,last_seen_at FROM players WHERE world_id=$1',[w.id])).rows;
+   const players=(await c.query('SELECT id,name,is_instructor,last_seen_at FROM players WHERE world_id=$1',[w.id])).rows.map(q=>p.is_instructor?q:{id:q.id,name:q.name});
    const events=(await c.query('SELECT * FROM events WHERE world_id=$1 AND rev>$2 AND (target_player_id=$3 OR actor_id=$3) ORDER BY created_at DESC',[w.id,since,p.id])).rows;
    return {world:w,rev:Number(w.rev),cards,paths,players,events,player:publicPlayer(p),full:since===0};
   },true));

@@ -1,5 +1,12 @@
 # Current focus
 
+- A + B + C are deployed at https://jootsy.netlify.app/mdst1050 ; Architect should test https://jootsy.netlify.app/sandbox . Engineer is doing the final smoke check and report commit. See `FINAL-REPORT.md` for all checklist results.
+- Checklist 1–16 have passing browser/API evidence. Item 17 is partial: stress load/draw about 1.3 seconds on this computer, 360 px Fit and desktop drag/zoom verified; real mid-range-phone speed and touch pinch remain untested.
+- Next actor: Architect, for the class walkthrough and a real phone check. Designer: none. Engineer will fix any concrete review findings.
+- No further account, database or storage retention action is required. Passcode remains private in the engineer chat. Classroom content has not been populated with QA writing.
+
+## Earlier slice handoff record
+
 - Slice A is deployed at https://jootsy.netlify.app/mdst1050 ; test in https://jootsy.netlify.app/sandbox . All deployed API acceptance checks passed, including concurrent plays, claims, ownership, wormholes, delete/replay, identity and scenario administration.
 - Slice B source passed A regressions, build and stress/map checks on remote engineer-b at 0d6c1ca. The fixture has 33 synthetic players, 300 cards, 150 face-down paths, 40 wormholes and depth 12. Layout is deterministic, matches depth and has no world-space node overlap.
 - Architect handoffs reviewed: `4edbbfc`, `a7665cf`, `a15f81b`. Thresholds are 7 / 7 / 11; play continues beyond ring 11. No specification change.
