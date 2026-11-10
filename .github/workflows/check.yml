@@ -1,13 +1,17 @@
 name: Transaction checks
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: [Expand source bundle]
+    types: [completed]
   push:
-    branches: [main]
+    branches: [main, engineer-b]
     paths: ["netlify/**", "public/**", "scripts/**", "package.json", ".github/workflows/check.yml"]
 permissions:
   contents: read
 jobs:
   check:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -24,6 +28,8 @@ jobs:
       INSTRUCTOR_PASSCODE: disposable_ci_only
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_branch || github.ref }}
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
@@ -31,3 +37,4 @@ jobs:
       - run: npm run check
       - run: node scripts/api-checks.mjs
       - run: npm run build
+      - run: if [ -f scripts/map-checks.mjs ]; then node scripts/map-checks.mjs; fi
