@@ -1,4 +1,4 @@
-Current release: **spec v3**, code `cd96e44`. Start with [V3-REPORT.md](V3-REPORT.md) and [ENGINEER-HANDOFF.md](ENGINEER-HANDOFF.md). Earlier slice reports describe v2 and are retained as history.
+Current release: spec v4 §16, core code `2b2b386` (PR #4), with a final sync/log-out hardening pass pending. Start with [V4-REPORT.md](V4-REPORT.md) and [ENGINEER-HANDOFF.md](ENGINEER-HANDOFF.md). Architect owns the authoritative spec and notes on branch `architect`.
 
 # Jootsy!
 
@@ -20,7 +20,7 @@ Configure `INSTRUCTOR_PASSCODE` and `TOKEN_SECRET` in Netlify environment variab
 
 ## Checks and handoffs
 
-GitHub Actions runs syntax, build, transaction, ownership and stress-layout checks against a disposable PostgreSQL service. `/checks.html` runs API acceptance checks only in `sandbox`, never in the class world. Its optional instructor field enables the scenario-administration checks.
+GitHub Actions runs syntax, build, transaction, ownership and stress-layout checks against a disposable PostgreSQL service. `/checks.html` runs API acceptance checks only in `sandbox`, never in the class world. Instructor and hidden-name checks also run in disposable Postgres and the live sandbox walkthrough.
 
 See `ENGINEER-REPORT.md`, `SLICE-B-REPORT.md` and the Current focus block in `ARCHITECT-NOTES.md`. Architect notes live on branch `architect`; production deploys follow `main`. No passcodes, tokens or connection strings belong in these files.
 
@@ -28,4 +28,6 @@ Terminal network access was restricted during the build. The temporary source-bu
 
 ## Tuesday boundaries
 
-The five playable types are Fork, Destiny, Dream, Wormhole and Dead End. Jootsy! stays face-down; its Thursday behavior is not implemented. Ring 11 is a labelled perimeter, and play continues beyond it. Images are downscaled to 1600 pixels and converted to JPEG before upload; audio/video uploads are outside Tuesday's scope. Media links can play natively or embed supported providers.
+Core v4 uses private three-stage sessions, autosave, Change/Undo and atomic Commit. Only committed cards appear on the Board. Fork, Destiny and Dream create draft cells; Wormhole links your own committed cards; Jootsy links into another player’s committed, visible timeline after five committed cards (instructor exempt). Dead End and public blank cards are retired. Cards shows your threads or resumes your open session. No ring rule stops play.
+
+The additive migration retains v3 code rollback compatibility. Tier 2 visual polish waits for explicit Neven go; see V4-REPORT.md for exact no-go cleanup SQL. Images remain downscaled to 1600 pixels and JPEG before upload; media links support the existing image/audio/video and provider embeds.
