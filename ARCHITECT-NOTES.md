@@ -1,17 +1,20 @@
 # Current focus
 
-- Engineer: Slice A implementation and first deployment. No playable deployment verified yet.
-- Architect handoffs reviewed: `4edbbfc`, `a7665cf`, `a15f81b`. Thresholds are 7 / 7 / 11; play continues beyond ring 11. No specification change.
-- Next actor: Engineer, then Architect tests Slice A at the production URL.
-- Designer: none at this point.
+- Slice A source on main passed disposable Postgres transaction checks and the production build (7072ccb). No live deployment is verified yet. See ENGINEER-REPORT.md.
+- Slice B is prepared on engineer-b at 0d6c1ca and passed A regression checks, the build, and stress/map checks: 33 synthetic players, 300 cards, 150 face-down paths, 40 wormholes, depth 12, deterministic layout, radial depth, no world-space node overlap. Phone interaction/performance remains unverified.
+- Designer — account action: GitHub requires re-authentication to add only jootsy to the existing Netlify app selected repositories. The open Confirm access page is waiting; this was requested once in the engineer chat. Existing selections must be kept.
+- Next actor: Engineer after the account step. Connect main and deploy A first; run deployed sandbox/mobile checks; report the URL; then release engineer-b and verify B. Architect may review the source now and tests the deployed game once the URL is verified.
+- Architect handoffs reviewed: 4edbbfc, a7665cf, a15f81b. Thresholds 7 / 7 / 11; ring 11 stays open. No spec change.
+- Netlify site jootsy exists (42ef9367-f166-40be-a1f5-22e1449726b7). Persistent Netlify Postgres is provisioned and ready. Instructor passcode is set in the environment and delivered privately in chat. Blobs is configured; not exercised yet. No trial retention click was shown.
+- C is deferred while A + B deployment and browser checks are pending. Nothing in any other repository or site was changed.
 
 ## Decisions
 
-- Vanilla JavaScript SPA with Netlify Functions, transactional Netlify Postgres, Netlify Blobs.
-- Every world mutation locks the world row. This serializes short writes, ensures stable revision order and safely handles simultaneous plays and scenario additions for 33 students.
-- Tokens are HMAC signed with a server-only environment secret, versioned per player so a reset revokes previous tokens.
-- Claims are advisory only after their ten-minute expiry; expiry is computed from the timestamp in the UI and server.
-- Instructor identity is reserved as Neven and seeded on first join from INSTRUCTOR_PASSCODE; the passcode is never committed.
-- The unique constraint applies to live cards only, so tombstones retain their historical parent path while deletion genuinely allows a new play on that path.
-- Publishing uses `main`. The source archive and expansion workflow are a transport fallback for blocked terminal network access; the expanded source files are what Netlify builds.
-- GitHub re-authentication is currently needed to add only this new repo to the existing Netlify app installation. The Netlify project and environment passcode already exist. No credentials are in this repo.
+- Vanilla JavaScript SPA; modern Netlify Functions; transactional Netlify Postgres; Netlify Blobs.
+- World-row locks serialize short mutations, preserving revision commit order and resolving concurrent plays and scenario additions.
+- HMAC-signed, versioned device tokens; salted scrypt passcode hashes.
+- Claims expire after ten minutes and are renewed every minute by the open composer.
+- Neven is reserved and initialized from INSTRUCTOR_PASSCODE at first join; no credentials are committed.
+- The unique live-card constraint preserves tombstones and permits replay on an erased leaf path.
+- main is the deployment branch. engineer-b isolates Map preparation until A is deployed.
+- The source bundle/expansion workflow transports code around blocked terminal network access. Expanded files are the build source; workflow permissions remain limited to this repo.
