@@ -2,11 +2,11 @@
 
 ## Current focus
 
-- **State (Mon Nov 9, 22:30 ET):** v2 spec issued. Engineer is building Slice A. Nothing deployed or reviewed yet.
-- **Next to act: Engineer.** Push Slice A, with a report (spec §14) in the repo: deployed URL, database and storage used, checklist items passing and failing, decisions made where the spec was silent.
-- **Then: Architect.** I play the deployed build as three students (spec §12, items 1–12, 15, 16) and reply here with pass/fail and fixes.
-- **Decisions needed from Neven as Designer:** none. All Designer items to date are confirmed.
-- **Class:** Tue Nov 10, 12:30 pm ET. Slices A + B are the class-ready game. Fallback is last year's Miro board; I will say so here, in this block, the moment it looks necessary.
+- **State (Tue Nov 10, 00:45 ET):** Engineer has deployed Slices A + B + C (`main`, code release `2c16471`; `FINAL-REPORT.md`). I have done a first review: code read of the API and schema, the live site's unauthenticated surface, and the join screen at phone width. **No blocking defect found.** I have not yet played it as students (see "Review 1" for why).
+- **Next to act: Engineer**, on findings F1 and F2 below (both small). F3–F6 are optional before class.
+- **Next to act: Neven as Designer**, on two items (see "Designer → Open").
+- **Do not build the "write, then cut" change yet.** It is described under "Proposed, not approved".
+- **Class:** Tue Nov 10, 12:30 pm ET. On present evidence the build is class-ready; fallback to the Miro board is not indicated.
 
 ## Where things are
 
@@ -40,6 +40,11 @@ Decided:
 | Nov 9 | **Thresholds confirmed.** Asked by Bolus: "Jootsy unlocks at ring 7 after seven cards have been played, and the game ends at ring 11. Are you happy with that default?" Answer: "yes." In the spec: `jootsy_ring=7`, `jootsy_min_cards=7`, `end_ring=11`. Still adjustable in settings. |
 | Nov 9 | **End of Game Perimeter is an open boundary.** Asked by Bolus whether he intended a hard stop at ring 11 or whether play should remain possible beyond it. Answer: "still allows play." The perimeter at ring 11 is drawn and labelled, and cards may be played beyond it. This matches the spec (§8.5); no change. |
 
+Open:
+
+1. **"Write, then cut" tonight?** Neven proposed (Nov 10, 00:09) that every card is the same and the Fork / Destiny / Dream / Wormhole / Jootsy! happens at the handoff from one card to the next. I agree it is cleaner and have told him why. Asked: reorder the composer tonight (fragment first, then the cut), with the full model change on Thursday? My default: yes, if he wants it and F1/F2 are closed first.
+2. **Netlify plan.** Which plan is the `jootsy` site on, and what does its function usage allowance look like? See F2. Only he can see the account.
+
 ## Architect decisions (mine; not for Designer unless he objects)
 
 - A card's type is fixed when it is played and determines the paths it names (spec R5).
@@ -49,14 +54,54 @@ Decided:
 - Tuesday media is images and pasted links only.
 - Jootsy! mirrors the target card live; it never stores a copy (§13).
 
+## Review 1 — Tue Nov 10, 00:45 ET
+
+**Reviewed:** `netlify/functions/api.mjs`, the initial migration, `public/app.js` (composer, polling, rendering), `netlify.toml`, at `main` `8d7aea2`. Live site: join screen at 375 px (no horizontal overflow), and unauthenticated requests to `state` and `plays` (401), a bad token (401), an unknown world (404).
+
+**Not reviewed:** play as two or three students in a browser. I do not create players or type passcodes on the live site myself. Either Neven signs a test student into the sandbox in the browser pane and I walk it from there, or the Engineer's browser evidence in `FINAL-REPORT.md` stands. My container cannot reach `jootsy.netlify.app` directly.
+
+**What holds, from the code:**
+- R1/R4: one live card per path is enforced by a partial unique index and by a world-row lock on every write. Concurrent plays cannot both land.
+- R2: depth is set server-side from the parent.
+- R5–R7, R9, R10: type/path counts, claims, scenario paths, path limits and delete rules match the spec.
+- R8/R11: every author-only route checks ownership server-side.
+- Delta reads run in a read-only repeatable-read snapshot, so a poll can never see half a write or skip a revision.
+- No `innerHTML` anywhere in the client; fragments are text nodes.
+
+**Findings**
+
+| # | Severity | Finding | Ask |
+|---|---|---|---|
+| F1 | Do before class | Tokens are signed with `TOKEN_SECRET`, falling back to `INSTRUCTOR_PASSCODE` (`api.mjs` line 16). If the fallback is in use, any student's token is material for guessing the instructor passcode offline. | Confirm a random `TOKEN_SECRET` (32+ bytes) is set in the Netlify environment. If it is not, set it now; everyone logs in again, so do it before students join. Reply yes/no here, never the value. |
+| F2 | Do before class | Every visible tab polls every 4 s. 33 students is about 8 function calls a second, roughly 59,000 per two-hour class, twice this week, plus play in between. Depending on the Netlify plan this may exhaust the allowance or cost money. | Make polling adaptive: 4 s for 60 s after the player's own action or any received change; otherwise 10 s; 15 s while the composer is open. Keep the pause when hidden and the immediate refresh after own writes. Report the measured calls per minute for one idle tab and one active tab. |
+| F3 | Optional | `join` hashes the passcode with scrypt while holding the world lock. 33 students joining in the same minute queue behind each other. | Hash before opening the transaction. |
+| F4 | Optional | An instructor cannot rename or remove a scenario's unwritten starting paths: the route requires authorship and scenarios have no author. | Allow instructors on scenario paths. |
+| F5 | Optional | Two students with the same first name: the second sees "That name already exists. The passcode does not match." | Add: "If you are new, pick a different name." |
+| F6 | Housekeeping | There are two files named `ARCHITECT-NOTES.md`: mine on `architect`, and one the Engineer wrote on `main`. | Engineer's status goes in `FINAL-REPORT.md` or an `ENGINEER-NOTES.md`. Remove or rename the copy on `main`. |
+
+`FINAL-REPORT.md` item 17 (pan and pinch on a real mid-range phone) is still open. Neven can close it in one minute by opening `/stress` on his own phone.
+
+## Proposed, not approved — "write, then cut" (v2.1)
+
+Awaiting Designer item 1. If approved, this is the whole change for tonight. No API, schema or data change.
+
+- Composer order becomes: title → fragment → media → **"How does it cut?"** (the five cut cards from the hand) → the paths that cut needs → **Play card**.
+- Opening the composer from a face-down card selects no cut. **Play card** is disabled, reading "Choose how it cuts", until one is chosen.
+- Tapping a card in the hand on the table still opens the composer with that cut already chosen.
+- Copy: "cut" replaces "type" wherever the player sees it. "Where does it lead?" stays as the heading over the path names.
+
+Thursday's model change (cuts independent of cards; Wormhole and Jootsy! as arrows; cut later; several cuts on one card) will come as spec v3 with the Jootsy! slice.
+
 ## Questions for the Engineer
 
-1. Which database and storage did you provision, and does Neven have to click anything to keep them?
-2. Is `main` what Netlify deploys? If you use a different branch, say which.
+1. F1: is `TOKEN_SECRET` set? Yes or no.
+2. Answered in `FINAL-REPORT.md`: Netlify managed Postgres and Netlify Blobs, no retention click, `main` deploys.
 
 ## Handoff log
 
 Newest first. Each entry: commit or file, what is ready, who acts next.
+
+- **Nov 10, 00:45 ET — Architect.** `ARCHITECT-NOTES.md` § "Review 1": first review of `main` `8d7aea2` (code release `2c16471`). No blocking defect. Findings F1–F6; F1 and F2 before class. Two Designer items opened. **Next: Engineer** (F1, F2) **and Neven** (Designer items 1 and 2).
 
 - **Nov 9, 22:30 ET — Architect.** `ARCHITECT-NOTES.md`: Designer clarification recorded (relayed by Bolus): ring 11 is an open boundary, play continues beyond it. My earlier note raising the question is removed as resolved. No spec change. **Next: Engineer** (Slice A + report), unchanged.
 
