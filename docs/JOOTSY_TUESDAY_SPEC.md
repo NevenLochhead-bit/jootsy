@@ -313,6 +313,14 @@ R9 (adding a path to your own Fork or Dream) and R10 (delete) are unchanged; an 
 - **Me drawer:** add **"Not yet cut"**, the player's own `open` cards, each with **Open**.
 - Player-facing copy says "cut", never "type" or "hand". (The word is Neven's to change.)
 
+### 15.4a The trace on every connection
+
+Designer (Neven, Nov 10): *"the arrows have a trace of what the transition is… a little arrow with the word wormhole on it, for instance, so we understand the movement."* A connection always says which cut made it.
+
+- **Map.** Every connection is an arrow pointing the way the story moves, in its cut's colour (already §8.6). Far zoom: colour only. Middle zoom: the cut's icon sits on the arrow at its midpoint. Near zoom: icon and word ("🔀 Fork", "✨ Dream", "⚫ Wormhole"). Wormhole chords get an arrowhead at the target and the same label. Labels never overlap a card; drop a label before letting it collide.
+- **Card view.** The "came from" line names the cut that brought you here: "← ✨ Dream from *{parent title}*". Each path tile under a card, written or face-down, carries the icon of the cut that dealt it. The wormhole door reads "⚫ Wormhole → *{target title}*" under its label.
+- A path's cut is the type of the card it leaves, so no new data is needed.
+
 ### 15.5 Existing data
 
 Cards already typed (the `stress` world, sandbox tests) stay as they are and behave as before. No conversion.
@@ -325,6 +333,7 @@ Cards already typed (the `stress` world, sandbox tests) stay as they are and beh
 - **A4.** Uncut works while all paths are unwritten; it is refused once another player has written or is writing on one.
 - **A5.** A wormhole cut rejects the card itself and any card by another player as its target.
 - **A6.** A previously typed card in `stress` renders and walks exactly as before.
+- **A7.** On the Map at near zoom every arrow shows its cut's icon and word, and at middle zoom its icon; in the Card view the "came from" line names the cut.
 
 ### 15.7 Cutoff and rollback
 

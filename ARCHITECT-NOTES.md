@@ -40,6 +40,7 @@ Decided:
 | Nov 9 | **Thresholds confirmed.** Asked by Bolus: "Jootsy unlocks at ring 7 after seven cards have been played, and the game ends at ring 11. Are you happy with that default?" Answer: "yes." In the spec: `jootsy_ring=7`, `jootsy_min_cards=7`, `end_ring=11`. Still adjustable in settings. |
 | Nov 9 | **End of Game Perimeter is an open boundary.** Asked by Bolus whether he intended a hard stop at ring 11 or whether play should remain possible beyond it. Answer: "still allows play." The perimeter at ring 11 is drawn and labelled, and cards may be played beyond it. This matches the spec (§8.5); no change. |
 | Nov 10 | **Write, then cut.** "Every card is essentially the same, but you determine how it branches… it's all about negotiating the cut from one to the next." And: "to me it is cleaner and I think we should change it. so we aren't playing specific cards but have these options for how to put them in relation." Issued as spec v2.2 (§15) for Tuesday. The hand of typed cards is removed; face-down cards and card backs stay. |
+| Nov 10 | **The trace.** "The arrows have a trace of what the transition is, I can see a little arrow with the word wormhole on it for instance, so we understand the movement." Added to v2.2 as §15.4a. |
 
 Open:
 
@@ -91,6 +92,8 @@ Open:
 ## Handoff log
 
 Newest first. Each entry: commit or file, what is ready, who acts next.
+
+- **Nov 10, 01:10 ET — Architect.** `docs/JOOTSY_TUESDAY_SPEC.md` v2.2: added §15.4a "The trace on every connection" and acceptance A7. Part of the same v2.2 work; no new data. **Next: Engineer**, unchanged (F1, F2, then §15).
 
 - **Nov 10, 01:00 ET — Architect.** `docs/JOOTSY_TUESDAY_SPEC.md` → **v2.2**: new §15 "write, then cut" (one new card state `open`, two new routes, the hand removed, acceptance A1–A6, cutoff and rollback). Supersedes the v2.1 composer-reorder proposal, now deleted from these notes. **Next: Engineer** — F1, F2, then §15.
 
