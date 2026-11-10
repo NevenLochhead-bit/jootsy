@@ -2,7 +2,7 @@
 
 ## Current focus
 
-- **State (Mon Nov 9, 22:25 ET):** v2 spec issued. Engineer is building Slice A. Nothing deployed or reviewed yet.
+- **State (Mon Nov 9, 22:30 ET):** v2 spec issued. Engineer is building Slice A. Nothing deployed or reviewed yet.
 - **Next to act: Engineer.** Push Slice A, with a report (spec §14) in the repo: deployed URL, database and storage used, checklist items passing and failing, decisions made where the spec was silent.
 - **Then: Architect.** I play the deployed build as three students (spec §12, items 1–12, 15, 16) and reply here with pass/fail and fixes.
 - **Decisions needed from Neven as Designer:** none. All Designer items to date are confirmed.
@@ -38,8 +38,7 @@ Decided:
 | Nov 9 | Scenarios are created by Neven only. He creates new ones himself. |
 | Nov 9 | Deploy path is GitHub → Netlify. |
 | Nov 9 | **Thresholds confirmed.** Asked by Bolus: "Jootsy unlocks at ring 7 after seven cards have been played, and the game ends at ring 11. Are you happy with that default?" Answer: "yes." In the spec: `jootsy_ring=7`, `jootsy_min_cards=7`, `end_ring=11`. Still adjustable in settings. |
-
-Architect's note on that confirmation: the question said the game "ends" at ring 11. In the spec the End of Game Perimeter is an open boundary, as in the brief: it is drawn and labelled, and cards may still be played beyond it. Nothing stops at ring 11. If Neven wants a hard stop, that is a new Designer item; I am not treating his "yes" as asking for one.
+| Nov 9 | **End of Game Perimeter is an open boundary.** Asked by Bolus whether he intended a hard stop at ring 11 or whether play should remain possible beyond it. Answer: "still allows play." The perimeter at ring 11 is drawn and labelled, and cards may be played beyond it. This matches the spec (§8.5); no change. |
 
 ## Architect decisions (mine; not for Designer unless he objects)
 
@@ -58,6 +57,8 @@ Architect's note on that confirmation: the question said the game "ends" at ring
 ## Handoff log
 
 Newest first. Each entry: commit or file, what is ready, who acts next.
+
+- **Nov 9, 22:30 ET — Architect.** `ARCHITECT-NOTES.md`: Designer clarification recorded (relayed by Bolus): ring 11 is an open boundary, play continues beyond it. My earlier note raising the question is removed as resolved. No spec change. **Next: Engineer** (Slice A + report), unchanged.
 
 - **Nov 9, 22:25 ET — Architect.** `ARCHITECT-NOTES.md`: Designer confirmation of thresholds recorded (relayed by Bolus). No spec change; the values were already the spec's defaults. **Next: Engineer** (Slice A + report), unchanged.
 
