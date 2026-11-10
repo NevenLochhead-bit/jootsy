@@ -1,9 +1,10 @@
 # Current focus
 
-- Designer GO on v4 and the eight-deploy budget are accepted from Architect `c10d5cf`, spec §17. Four v4 publications remain. Final publication by 11:45 ET; nothing after noon.
-- Engineer is building **17.A + 17.B together**: Choice/Narrative Fragment, Choices, transition order/removals, green Commit, My Latest, Add Scenario, remembered Players collapse, explicit new/returning joining and recovery.
-- Next actor: Engineer for transactional checks, one A+B publication and browser acceptance, then 17.C audio, then 17.D wires/scan. Neven's graphic-only notes can come directly.
-- The Designer confirmed the Commit sound. Physical-phone behaviour remains a human check. Architect's F11/F12 are accepted after-class limitations and are not in this change.
+- **17.A + 17.B are deployed together and verified**, runtime `f2e317e6a1b8bc1445cdbf2b2ba6d07331dc514f` / PR #7, 10:01 ET. Deploy **5 of 8**. Three publications remain; final by 11:45 ET, nothing after noon.
+- Browser acceptance: returning typo and taken-name refusals, name spacing/case, keyboard Enter and assertive error regions, Show passcode, signed-in identity, one-card green Commit, live Choices, Destiny-first order, no stage-three outgoing controls, empty Board centre, instructor-only Add Scenario and remembered Players collapse pass. Safari returned as the same player and recovered the saved open session and card text. Actual VoiceOver speech was not tested.
+- **Next actor: Engineer**, building 17.C image + sound, then 17.D wires + scan. Safari playback is a release gate for sound; if it is not solid by 11:30, ship without Add sound.
+- Decisions: Name still labels the player identity and scenario name, as explicitly required by B/the scenario form; card fields are Choice and Narrative Fragment. Cards now shows the unfinished-session banner and Resume alongside committed cards. Stage-three incoming Change remains; outgoing transition controls are removed.
+- Neven's Commit sound approval is recorded. Physical-phone touch/pinch/performance remains his hardware check. Existing Postgres/Blobs and private instructor environment are unchanged. F11/F12 remain after-class items.
 
 Authoritative Architect notes and the Current focus for the project are on branch `architect`: [ARCHITECT-NOTES.md](https://github.com/NevenLochhead-bit/jootsy/blob/architect/ARCHITECT-NOTES.md). This file records engineering handoffs only.
 
@@ -20,3 +21,10 @@ Authoritative Architect notes and the Current focus for the project are on branc
 - Ready: private three-stage sessions, autosave/recovery, Change/Undo including removed subtrees, atomic Commit, committed Board, Cards threads, Wormhole, Jootsy and instructor hiding.
 - Architect acts next on the sandbox review. Designer items for Neven: listen to Commit, try a real phone, then give go/no-go at 11:00 ET. No one should infer go from silence.
 - Notice for Bolus: **Engineer pushed: v4 core is live at 19fdf3b; V4-REPORT.md and ENGINEER-HANDOFF.md are ready; Architect reviews the sandbox, and Neven gives the 11:00 go/no-go.**
+
+## v4.1 A+B handoff
+
+- Runtime `f2e317e` / PR #7; source-expansion #30 and transaction checks #36 passed. Evidence: docs/verification/v41-ab.jpg (saved locally, included in the next source bundle).
+- Ready for Architect review in https://jootsy.netlify.app/sandbox . Class URL remains https://jootsy.netlify.app/mdst1050 . Reload before testing.
+- Next: Engineer builds C then D without waiting. No Designer decision is blocking.
+- Notice: **Engineer pushed: v4.1 A+B are live at f2e317e; ENGINEER-HANDOFF.md is ready; Architect can review while Engineer builds C.**
