@@ -7,12 +7,12 @@ The v4 core from Architect `1eac13a`, spec §16, is live. Latest runtime: **`6d9
 - Legacy fixture: https://jootsy.netlify.app/stress
 - Infrastructure: existing claimed Netlify Postgres, Netlify Blobs `jootsy-images`, Netlify **Pro** team (`nf_team_pro`, verified through the site API). No database retention/setup click is outstanding.
 - Instructor identity is **Neven**. The existing `INSTRUCTOR_PASSCODE` and independent `TOKEN_SECRET` remain Functions-scoped; the passcode is supplied privately in chat, never this public repo.
-- **Three of four allowed v4 production publications used.** Transport and documentation commits skip Netlify; branch/preview deploys remain disabled. The runtime ignore rule is a second guard for documentation-only expansion commits.
+- **Three v4 publications used; the final permitted publication fixes sparse Players-dock alignment found during the class-entry check.** Transport and documentation commits skip Netlify; branch/preview deploys remain disabled. The runtime ignore rule is a second guard for documentation-only expansion commits.
 - **Tier 2 has not started.** Neven tests 10:30–11:00 ET and gives go/no-go at 11:00. Architect reviews the core evidence below. No deployment after noon; any approved final polish deploy must finish by 11:45.
 
 ## Verification
 
-No functional failure remains observed. §16.8 checks 2–14 pass using the evidence below. Check 1's complete desktop game loop passes; **sound quality/audibility still needs Neven's listening check**. **Physical-phone touch/pinch and performance remain unverified** (retained §12 item 17); the 360×800 layout was checked in Chrome, which does not constitute a real-phone test.
+No functional failure remains observed. The sparse dock alignment correction is queued for the fourth and final permitted publication. §16.8 checks 2–14 pass using the evidence below. Check 1's complete desktop game loop passes; **sound quality/audibility still needs Neven's listening check**. **Physical-phone touch/pinch and performance remain unverified** (retained §12 item 17); the 360×800 layout was checked in Chrome, which does not constitute a real-phone test.
 
 | §16.8 | Result and evidence |
 | --- | --- |
