@@ -1,4 +1,4 @@
-Current release: spec v4 §16, core code `2b2b386` (PR #4), with a final sync/log-out hardening pass pending. Start with [V4-REPORT.md](V4-REPORT.md) and [ENGINEER-HANDOFF.md](ENGINEER-HANDOFF.md). Architect owns the authoritative spec and notes on branch `architect`.
+Current release: **spec v4 §16 core**, runtime `6d927ba` (PR #5). Start with [V4-REPORT.md](V4-REPORT.md) and [ENGINEER-HANDOFF.md](ENGINEER-HANDOFF.md). Architect owns the authoritative spec and notes on branch `architect`.
 
 # Jootsy!
 
