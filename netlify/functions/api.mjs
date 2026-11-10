@@ -5,7 +5,7 @@ import { promisify } from 'node:util';
 const scrypt=promisify(scryptCb);
 const env=k=>globalThis.Netlify?.env.get(k) ?? process.env[k];
 let database;
-const db=()=>database??=getDatabase();
+const db=()=>database??=getDatabase(env('NETLIFY_DB_URL')?{connectionString:env('NETLIFY_DB_URL')}:undefined);
 class Fault extends Error { constructor(status,error,message,extra={}){super(message);Object.assign(this,{status,error,extra});} }
 const fail=(status,code,message,extra)=>{throw new Fault(status,code,message,extra);};
 const text=(v,max,label)=>{if(typeof v!=='string'||!v.trim()||Array.from(v.trim()).length>max)fail(400,'invalid',`${label} must be 1–${max} characters.`);return v.trim();};

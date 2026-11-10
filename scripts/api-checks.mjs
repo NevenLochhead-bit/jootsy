@@ -1,0 +1,25 @@
+import { readFile } from 'node:fs/promises';
+import { strict as assert } from 'node:assert';
+import { getDatabase } from '@netlify/database';
+import handler from '../netlify/functions/api.mjs';
+const db=getDatabase({connectionString:process.env.NETLIFY_DB_URL});
+if(!process.env.CI_TEST_DATABASE)throw Error('This script is only for the disposable CI Postgres service.');
+await db.pool.query(await readFile('netlify/database/migrations/20261110030000_initial.sql','utf8'));
+async function call(route,method='GET',body,token){const headers={};if(token)headers.authorization=`Bearer ${token}`;if(body)headers['content-type']='application/json';const r=await handler(new Request(`https://jootsy.test/api/w/sandbox/${route}`,{method,headers,body:body?JSON.stringify(body):undefined}));return {status:r.status,...await r.json()};}
+const a=await call('join','POST',{name:'Test A',passcode:'testing-a'}),b=await call('join','POST',{name:'Test B',passcode:'testing-b'});assert(a.token&&b.token,JSON.stringify(a));
+const state=await call('state?since=0','GET',null,a.token);assert.equal(state.cards.length,7);const root=state.cards[0];
+const first=await call('plays','POST',{new_path:{from_card_id:root.id,label:'First branch'},type:'fork',body:'I hear a door open.',paths:['Left','Right'],depth:99,author_id:b.player.id},a.token);assert.equal(first.status,200,JSON.stringify(first));assert.equal(first.card.depth,1);assert.equal(first.card.author_id,a.player.id);
+const next=await call('state?since=0','GET',null,a.token);const offered=next.paths.filter(x=>x.from_card_id===first.card.id);assert.equal(offered.length,2);
+assert.equal((await call(`paths/${offered[0].id}/claim`,'POST',{},a.token)).status,200);assert.equal((await call(`paths/${offered[0].id}/claim`,'POST',{},b.token)).status,409);assert.equal((await call(`paths/${offered[0].id}/claim`,'DELETE',null,a.token)).status,200);
+const play={path_id:offered[0].id,type:'dead_end',body:'I reach a wall.'};const race=await Promise.all([call('plays','POST',play,a.token),call('plays','POST',play,b.token)]);assert.deepEqual(race.map(r=>r.status).sort(),[200,409]);assert(race.find(x=>x.status===409).card_id);
+const ten=await Promise.all(Array.from({length:10},(_,i)=>call('plays','POST',{new_path:{from_card_id:root.id,label:`Simultaneous ${i}`},type:'dead_end',body:'I find another window.'},i%2?a.token:b.token)));assert(ten.every(x=>x.status===200),JSON.stringify(ten));
+for(const [route,method,body]of [[`cards/${first.card.id}`,'PATCH',{body:'Taken'}],[`cards/${first.card.id}`,'DELETE'],[`cards/${first.card.id}/paths`,'POST',{label:'Taken'}],[`paths/${offered[1].id}`,'PATCH',{label:'Taken'}],[`paths/${offered[1].id}`,'DELETE']])assert.equal((await call(route,method,body,b.token)).status,403);
+assert.equal((await call(`cards/${first.card.id}`,'DELETE',null,a.token)).status,409);
+const leaf=await call('plays','POST',{path_id:offered[1].id,type:'dream',body:'I become the rain.',paths:['Wake']},a.token);assert.equal(leaf.status,200,JSON.stringify(leaf));assert.equal((await call(`cards/${leaf.card.id}`,'DELETE',null,a.token)).status,200);assert.equal((await call('plays','POST',{path_id:offered[1].id,type:'destiny',body:'I walk into daylight.',paths:['Go']},b.token)).status,200);
+assert.equal((await call('plays','POST',{new_path:{from_card_id:root.id,label:'Bad door'},type:'wormhole',body:'I step through.',door:{label:'Door',to_card_id:first.card.id}},b.token)).status,403);
+assert.equal((await call('plays','POST',{new_path:{from_card_id:root.id,label:'Good door'},type:'wormhole',body:'I step through.',door:{label:'Door',to_card_id:first.card.id}},a.token)).status,200);
+assert.equal((await call('join','POST',{name:' TEST A ',passcode:'testing-a'})).player.id,a.player.id);assert.equal((await call('join','POST',{name:'Test A',passcode:'wrong'})).status,401);
+const invalid=await call('plays','POST',{new_path:{from_card_id:root.id,label:'Invalid'},type:'fork',body:'I wait.',paths:['Only one']},a.token);assert.equal(invalid.status,400);
+const delta=await call(`state?since=${state.rev}`,'GET',null,b.token);assert(delta.cards.length>10&&delta.paths.length>10);
+const invariant=await db.pool.query('SELECT c.id FROM cards c JOIN paths p ON p.id=c.parent_path_id JOIN cards parent ON parent.id=p.from_card_id WHERE NOT c.deleted AND (p.to_card_id IS DISTINCT FROM c.id OR c.depth<>parent.depth+1)');assert.equal(invariant.rows.length,0);
+console.log('PASS: seeds; identity; authoritative author/depth; type arity; claims; concurrent plays; ten scenario additions; ownership; wormholes; tombstone/replay; delta state; SQL tree invariants.');await db.pool.end();
