@@ -44,6 +44,7 @@ Open:
 
 1. **"Write, then cut" tonight?** Neven proposed (Nov 10, 00:09) that every card is the same and the Fork / Destiny / Dream / Wormhole / Jootsy! happens at the handoff from one card to the next. I agree it is cleaner and have told him why. Asked: reorder the composer tonight (fragment first, then the cut), with the full model change on Thursday? My default: yes, if he wants it and F1/F2 are closed first.
 2. **Netlify plan.** Which plan is the `jootsy` site on, and what does its function usage allowance look like? See F2. Only he can see the account.
+3. **Cuts on the card's edges.** Neven proposed (Nov 10, 00:12) that the cut buttons sit on all four sides of the card, any cut from any side: "I could draw a fork out of the top, or a wormhole on the side to the right." My reply: yes to cuts living on the card's edges; no to the side choosing where the next card goes, because that returns placement to the player and breaks the derived map (ring = distance). Offered instead: fixed meanings per edge (back / forward / the two lateral doors). Thursday at the earliest; nothing to build. Awaiting his answer.
 
 ## Architect decisions (mine; not for Designer unless he objects)
 
@@ -100,6 +101,8 @@ Thursday's model change (cuts independent of cards; Wormhole and Jootsy! as arro
 ## Handoff log
 
 Newest first. Each entry: commit or file, what is ready, who acts next.
+
+- **Nov 10, 00:55 ET — Architect.** `ARCHITECT-NOTES.md`: Designer item 3 opened (cuts on the card's edges). Nothing to build. **Next: unchanged** — Engineer on F1, F2; Neven on Designer items 1–3.
 
 - **Nov 10, 00:45 ET — Architect.** `ARCHITECT-NOTES.md` § "Review 1": first review of `main` `8d7aea2` (code release `2c16471`). No blocking defect. Findings F1–F6; F1 and F2 before class. Two Designer items opened. **Next: Engineer** (F1, F2) **and Neven** (Designer items 1 and 2).
 
