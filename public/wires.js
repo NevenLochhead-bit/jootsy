@@ -1,0 +1,8 @@
+// Geometry is rebuilt only when the committed graph changes, never during a frame.
+export function wirePoint(edge,t){const [a,b,c,d]=edge.points,z=1-t;return edge.line?{x:a.x+(d.x-a.x)*t,y:a.y+(d.y-a.y)*t}:{x:z*z*z*a.x+3*z*z*t*b.x+3*z*t*t*c.x+t*t*t*d.x,y:z*z*z*a.y+3*z*z*t*b.y+3*z*t*t*c.y+t*t*t*d.y};}
+export function wireVisible(edge,box){const b=edge.bounds;return b.minX<=box.maxX&&b.maxX>=box.minX&&b.minY<=box.maxY&&b.maxY>=box.minY;}
+export function buildWires(nodes,paths){const byId=new Map(nodes.map(n=>[n.id,n])),edges=[];
+ const add=(id,kind,owner,points,line=false)=>{let hash=2166136261;for(const c of id){hash^=c.charCodeAt(0);hash=Math.imul(hash,16777619)>>>0;}const edge={id,kind,owner,points,line,duration:3300+hash%701,phase:(hash%1000)/1000,bounds:{minX:Math.min(...points.map(p=>p.x)),maxX:Math.max(...points.map(p=>p.x)),minY:Math.min(...points.map(p=>p.y)),maxY:Math.max(...points.map(p=>p.y))}};edge.samples=Array.from({length:21},(_,i)=>wirePoint(edge,i/20));edge.length=edge.samples.slice(1).reduce((sum,p,i)=>sum+Math.hypot(p.x-edge.samples[i].x,p.y-edge.samples[i].y),0);edges.push(edge);};
+ for(const n of nodes){const parent=byId.get(n.parentId);if(!parent)continue;const r=(parent.radius+n.radius)/2;add(n.id,n.kind||'fork',n.card?.author_id||n.path?.created_by,[parent,{x:Math.cos(parent.angle)*r,y:Math.sin(parent.angle)*r},{x:Math.cos(n.angle)*r,y:Math.sin(n.angle)*r},n]);}
+ for(const p of paths){if(p.deleted||p.draft||!['wormhole','jootsy'].includes(p.kind))continue;const a=byId.get(p.from_card_id),d=byId.get(p.to_card_id);if(a&&d)add(p.id,p.kind,p.created_by,[a,a,d,d],true);}return edges;
+}

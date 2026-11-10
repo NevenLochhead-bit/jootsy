@@ -28,7 +28,7 @@ window.renderMedia=c=>{
  if(embed)return e('iframe',{class:'card-media embed',src:embed,title:'Media on this card',loading:'lazy',allow:'encrypted-media; fullscreen; picture-in-picture',allowfullscreen:true,referrerpolicy:'strict-origin-when-cross-origin'});
  return e('a',{class:'media-link',href:u.href,target:'_blank',rel:'noopener noreferrer'},u.hostname+' ↗');
 };
-window.renderVideo=c=>c.video_url?e('video',{class:'card-media card-video',src:c.video_url,controls:true,playsinline:true,muted:true,loop:true,preload:'metadata','aria-label':'Card video'}):null;
+window.renderVideo=c=>{if(!c.video_url)return null;const video=e('video',{class:'card-media card-video',src:c.video_url,controls:true,playsinline:true,muted:true,loop:true,preload:'metadata','aria-label':'Card video'});video.muted=true;return video;};
 window.renderSound=c=>c.audio_url?e('audio',{class:'card-sound',src:c.audio_url,controls:true,preload:'metadata','aria-label':'Card sound'}):null;
 window.composerMedia=(initial={},onChange=()=>{})=>{
  const state={media_kind:initial?.media_kind||null,media_url:initial?.media_url||null,audio_url:initial?.audio_url||null,video_url:initial?.video_url||null};let busy=0;
