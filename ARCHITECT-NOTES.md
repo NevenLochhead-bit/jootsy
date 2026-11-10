@@ -2,14 +2,11 @@
 
 ## Current focus
 
-- **State (Tue Nov 10, 08:35 ET):** v3 is live (`cd96e44`) and Neven has played it. His notes (08:07) ask for a different way of writing: a three-stage editing session with Commit, Board and Cards as the two views, Jootsy! today, no Dead End, no blank cards on the Board. **Spec v4** is issued: `docs/JOOTSY_TUESDAY_SPEC.md` §16, branch `architect`.
-- **Next to act: Engineer.** §16, Tier 1 (§16.1–16.6), in production and verified against §16.8 **by 10:30 ET**. Tier 2 (§16.7) only after Neven says go. **Deploy budget raised to 8** for v4 (about 120 credits) now that he is testing rapidly; batch fixes, never one deploy per fix. F8 is folded into §16.1; F10 is moot.
-- **Neven is testing live, from now.** Engineer: deploy Tier 1 the moment it passes §16.8 and say so; do not wait for 10:30. He plays it in the **sandbox** straight away.
-- **Two lanes for what he finds.** A defect ("it is broken") goes straight to the Engineer through Bolus, and the Engineer logs it in `ENGINEER-HANDOFF.md`. A design change ("it should work differently") comes to me and reaches the Engineer only as a spec line here.
-- **Go / no-go is still 11:00 ET, his call.** I review the code in parallel; I cannot play it.
-- **No-go path:** republish the v3 deploy. v3 works today and is the fallback.
-- **Nothing deploys after 12:00 ET.** Class is 12:30.
-- **Neven as Designer:** four calls of mine to veto, under "Designer → For him to veto". None blocks the Engineer.
+- **State (Tue Nov 10, 09:40 ET):** **v4 core is live** (`main` runtime `19fdf3b`, published 09:13). Review 3 below: no blocking defect in the server code. Neven is playing it in the sandbox now.
+- **Deploy budget for v4 is 8, not 4** (raised at 08:40, commit `d86d67b`; the Engineer's report had not seen it). **4 used, 4 left.** Tier 2 needs no further budget decision, only Neven's go.
+- **Next to act: Neven.** Play the sandbox; listen for the commit sound; go / no-go by 11:00 ET. Defects straight to the Engineer through Bolus; design changes to me.
+- **Next to act: Engineer.** Hold. Fix only what Neven reports as broken, batched. Start Tier 2 (§16.7) on his go. Last deploy 11:45; nothing after 12:00.
+- **No-go path:** republish the v3 deploy and run the cleanup SQL in `V4-REPORT.md`. Prepared, not executed.
 
 ## Where things are
 
@@ -78,6 +75,29 @@ Open, none needed before class:
 - Each student's branch as an export for the game review.
 - Edge buttons, if he wants them.
 
+## Review 3 — Tue Nov 10, 09:40 ET (of v4 core at `main` `7a4ea14`, runtime `19fdf3b`)
+
+**Reviewed:** `V4-REPORT.md`, `ENGINEER-HANDOFF.md`, migration `20261110133000_sessions_v4.sql`, and in `netlify/functions/api.mjs` the state filter, session source and stage rules, link targets, Change, Commit, Discard and Delete. **Not reviewed:** the editor in a browser; that is Neven's test.
+
+| Rule | Holds in the code? |
+|---|---|
+| Drafts invisible to everyone but their author (cards and paths), including to instructors | Yes: filtered in the `/state` queries themselves |
+| S2 one open session | Yes: partial unique index plus `409` with the anchor |
+| S4 three stages | Yes: a draft source must hang directly off the anchor |
+| S3 link sources and targets; Jootsy! threshold, instructor exempt, hidden and own cards refused | Yes, and re-checked at Commit |
+| S7 Commit is one transaction; refused with a blank cell | Yes |
+| F8 hidden card's name masked, and the path re-sent on hide | Yes |
+| Migration additive | Yes; adds an `edit_sessions` table beyond what I specified, which is a sound way to do S2 |
+
+**Findings (none blocks class)**
+
+| # | Severity | Finding | Ask |
+|---|---|---|---|
+| F11 | Known limitation | An open session leaves invisible draft paths on its anchor. While it is open, the anchor's author cannot delete that card and is told "A path leaves this card" with nothing visible to explain it. An abandoned session holds that state indefinitely. | After class: expire sessions untouched for 24 hours, and word the refusal "Someone is writing from this card." Not today. |
+| F12 | Known limitation | If a Jootsy! target is hidden or deleted between drafting and Commit, the whole Commit is refused until the student Changes that transition. | Acceptable. Make sure the message names the card. Not today. |
+
+The commit sound and real-phone behaviour remain unverified by anyone but Neven.
+
 ## Review 2 — Tue Nov 10, 01:20 ET (of v3 at `main` `5f5c4b3`, code `cd96e44`)
 
 **Reviewed:** `V3-REPORT.md`, `ENGINEER-HANDOFF.md`, migration `20261110060000_cuts_v3.sql`, `netlify/functions/api.mjs` in full, client strings and routes, `docs/verification/v3-map.jpg`. Live: the site is serving the v3 client (cut row present, hand gone, no perimeter code).
@@ -138,6 +158,8 @@ None open.
 ## Handoff log
 
 Newest first. Each entry: commit or file, what is ready, who acts next. (Entries I logged earlier tonight carried times about an hour fast; the times below are from the commits.)
+
+- **Nov 10, 09:40 ET — Architect.** `ARCHITECT-NOTES.md` § "Review 3": v4 core at `19fdf3b` reviewed from code and report; no blocking defect; F11, F12 logged as known limitations. Deploy budget restated: 8 total, 4 left. **Next: Neven** (sandbox play, go / no-go by 11:00). **Engineer:** hold; fix reported defects in batches; Tier 2 on his go.
 
 - **Nov 10, 08:40 ET — Architect.** `ARCHITECT-NOTES.md` Current focus: Designer is available to test at once. Deploy Tier 1 when it passes rather than at 10:30; two lanes for his findings (defects → Engineer via Bolus; design changes → Architect); deploy budget 8, overriding the 4 in §16.9. 11:00 go / no-go and the 12:00 freeze stand. **Next: Engineer.**
 
