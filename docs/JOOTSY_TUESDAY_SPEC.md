@@ -1,6 +1,6 @@
-# Jootsy! — Tuesday Spec (for Codex) — v2.3
+# Jootsy! — Tuesday Spec (for Codex) — v2.4
 
-> **v2.3 (Tue Nov 10, 01:20 ET): read §15 first.** It changes how a card is played ("write, then cut") and overrides §5 R5, §6 `POST /plays`, and §7.2 wherever they differ. Everything else in v2 stands.
+> **v2.4 (Tue Nov 10, 01:40 ET): read §15 first.** It changes how a card is played ("write, then cut") and overrides §5 R5, §6 `POST /plays`, and §7.2 wherever they differ. Everything else in v2 stands.
 
 *From the architect. **Replaces v1 entirely**; if you started on v1, the model changed (types now live on cards, every move plays a card, paths can be claimed). Self-contained: you do not need the brief to build this. Deadline: deployed and tested before **Tuesday Nov 10, 2026, 10:00 am ET**. Class is at 12:30 pm with 33 first-year students, many on phones.*
 
@@ -264,7 +264,7 @@ Thursday's Jootsy! card, so the model can take it without migration: a card of t
 
 After each slice: the deployed URL, the instructor passcode, the database and storage you used and anything Neven must click to keep them, which checklist items pass, and anything you decided where this spec was silent.
 
-## 15. Change v2.3 — write, then cut
+## 15. Change v2.4 — write, then cut
 
 Designer decisions (Neven, Nov 10): *"we aren't playing specific cards but have these options for how to put them in relation."* And: *"the student really just needs to focus on naming their cards, adding an image or video, and a description of some type of narrative fragment."*
 
@@ -340,6 +340,17 @@ Designer (Neven, Nov 10): *"we could also have a 'describe image' option and AI 
 - Composer: the media row becomes **Add image · Paste a link · Describe an image**. The third opens one line: *"Describe the image this card should have."* A card has either media or a description, not both.
 - Card view: where the image would be, a framed placeholder with the description in italics and the caption "image to come". Nothing on the Map.
 - If this is not built by the cutoff, leave it out entirely; nothing else depends on it.
+
+### 15.4c No perimeters
+
+Designer (Neven, Nov 10): *"I also don't think we need the perimeter rings. My task for students is to play at least five cards, that's it."* This overrides §7 and §8 wherever they mention rings or perimeters.
+
+- **Map:** draw no rings at all: no Jootsy! Perimeter, no End of Game ring, no depth hairlines, no ring labels; remove them from the legend. The layout itself is unchanged: radial, scenarios at the centre, radius strictly from depth (§8.1–8.4).
+- **Card view:** remove "Ring {n}" from the top bar.
+- **The task is five cards.** `jootsy_min_cards` defaults to 5 (migration: set it to 5 in every world). Wherever progress was shown toward the perimeter, show **"{n} of 5 cards played"** instead: in the Me drawer (with the bar), and on the locked 🎆 Jootsy! button, which on Tuesday reads "{n} of 5 cards played. Jootsy! opens on Thursday."
+- **Settings:** show only `jootsy_min_cards` and `jootsy_enabled`. Leave `jootsy_ring` and `end_ring` in the table, unused.
+- **Instructor players table:** drop "furthest ring"; keep cards played, and mark players who have reached `jootsy_min_cards`.
+- Acceptance item 13 becomes: every card's distance from the centre on the Map equals its depth; no two nodes overlap in the `stress` world; **no ring or perimeter is drawn anywhere.**
 
 ### 15.5 Existing data
 

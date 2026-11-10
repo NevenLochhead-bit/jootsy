@@ -2,9 +2,9 @@
 
 ## Current focus
 
-- **State (Tue Nov 10, 01:20 ET):** Slices A + B + C are deployed (`main`, code release `2c16471`). Review 1 found no blocking defect. Neven has decided the game changes to **"write, then cut"**: cards are all the same; Fork, Destiny, Dream, Wormhole and Dead End are options for how the author puts them in relation.
-- **Next to act: Engineer.** In this order: (1) F1 and F2 below; (2) spec **v2.3**, `docs/JOOTSY_TUESDAY_SPEC.md` §15 on branch `architect`. Cutoff 09:00 ET; rollback recipe in §15.7.
-- **Then: Architect.** Review of v2.3 against §15.6.
+- **State (Tue Nov 10, 01:40 ET):** Slices A + B + C are deployed (`main`, code release `2c16471`). Review 1 found no blocking defect. Neven has decided the game changes to **"write, then cut"**: cards are all the same; Fork, Destiny, Dream, Wormhole and Dead End are options for how the author puts them in relation.
+- **Next to act: Engineer.** In this order: (1) F1 and F2 below; (2) spec **v2.4**, `docs/JOOTSY_TUESDAY_SPEC.md` §15 on branch `architect`. Cutoff 09:00 ET; rollback recipe in §15.7.
+- **Then: Architect.** Review of v2.4 against §15.6.
 - **Next to act: Neven as Designer**, on items 2–4 under "Designer → Open". None blocks the Engineer.
 - **Class:** Tue Nov 10, 12:30 pm ET. `2c16471` is class-ready as it stands and is the fallback if v2.2 misses its cutoff.
 
@@ -43,6 +43,7 @@ Decided:
 | Nov 10 | **The trace.** "The arrows have a trace of what the transition is, I can see a little arrow with the word wormhole on it for instance, so we understand the movement." Added to v2.2 as §15.4a. |
 | Nov 10 | **Words on hover only; colour is the code.** "Maybe those words are only hover-over visible, and each transition is colour coded depending on what type it is." §15.4a revised in v2.3. |
 | Nov 10 | **The student's job is three things.** "The student really just needs to focus on naming their cards, adding an image or video, and a description of some type of narrative fragment." Read by me as: a cut is one click and deals blank cards; whoever writes a card names it. Issued in v2.3. **Flagged to him as item 5 below in case I have over-read it.** |
+| Nov 10 | **No perimeters; the task is five cards.** "I also don't think we need the perimeter rings, my task for students is to play at least five cards, that's it, we don't need the perimeter." **Supersedes** the two Nov 9 rows above on thresholds and the End of Game Perimeter. Issued as §15.4c in v2.4: no rings drawn; `jootsy_min_cards` = 5. |
 
 Open:
 
@@ -51,6 +52,7 @@ Open:
 4. **The word "cut".** v2.2 uses his word from "negotiating the cut" in all player-facing copy ("How does it cut?"). His to confirm or replace.
 5. **Who names a card?** v2.3 has the writer name their own card, and a Fork deal blank cards with one click. Before, the person who forked named both paths, as on the old board ("devise the forks"). The forker can still pencil a name on a blank card as an invitation, but does not have to. Confirm, or say the forker must name the paths.
 6. **"Describe an image": who makes the images, and when?** Raised by Neven (Nov 10, 00:17). v2.3 §15.4b only stores the description and shows it as a placeholder; it is last in the build order and droppable. My default: no generation in the live game; after Thursday, an instructor-triggered batch that he reviews before any image appears on a card. Needs his answer before anything generates.
+7. **Five cards: anywhere, or in a row?** With no perimeter, a student can meet the task with five separate first cards on five scenarios and never build a thread. v2.4 counts any five. Also assumed: Jootsy! unlocks at five cards played (Thursday). Confirm both, or say otherwise.
 
 ## Architect decisions (mine; not for Designer unless he objects)
 
@@ -96,6 +98,8 @@ Open:
 ## Handoff log
 
 Newest first. Each entry: commit or file, what is ready, who acts next.
+
+- **Nov 10, 01:40 ET — Architect.** `docs/JOOTSY_TUESDAY_SPEC.md` → **v2.4**: added §15.4c "No perimeters" (no rings on the Map, no "Ring n", task is five cards, settings trimmed, acceptance 13 reworded). Nothing else in §15 changed since the 01:30 entry. **I am freezing the Tuesday spec here**: further Designer ideas go to Thursday unless they fix a defect. **Next: Engineer** — F1, F2, then §15 (v2.4).
 
 - **Nov 10, 01:30 ET — Architect.** `docs/JOOTSY_TUESDAY_SPEC.md` v2.3: added §15.4b "Describe an image" (store-only, optional, built last). No change to anything else in §15. **Next: Engineer**, unchanged.
 
