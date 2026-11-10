@@ -1,5 +1,9 @@
 import { getDatabase } from '@netlify/database';
 import { getStore } from '@netlify/blobs';
+import {soundType,mediaResponse,SOUND_ERROR,IMAGE_LIMIT,SOUND_LIMIT} from './lib/media.mjs';
+let testMediaStore;
+const mediaStore=()=>testMediaStore??getStore({name:'jootsy-images',consistency:'strong'});
+export function setTestMediaStore(store){if(!process.env.CI_TEST_DATABASE)throw Error('Disposable CI only.');testMediaStore=store;}
 import { randomBytes, randomUUID, scrypt as scryptCb, timingSafeEqual, createHmac } from 'node:crypto';
 import { promisify } from 'node:util';
 const scrypt=promisify(scryptCb);
@@ -8,7 +12,7 @@ let database;
 const db=()=>database??=getDatabase(env('NETLIFY_DB_URL')?{connectionString:env('NETLIFY_DB_URL')}:undefined);
 class Fault extends Error { constructor(status,error,message,extra={}){super(message);Object.assign(this,{status,error,extra});} }
 const fail=(status,code,message,extra)=>{throw new Fault(status,code,message,extra);};
-const text=(v,max,label)=>{if(label==='Choice'&&(typeof v!=='string'||!v.trim()))fail(400,'invalid','Give this card a choice.');if(typeof v!=='string'||!v.trim()||Array.from(v.trim()).length>max)fail(400,'invalid',`${label} must be 1–${max} characters.`);return v.trim();};
+const text=(v,max,label)=>{if(label==='Choice'&&(typeof v!=='string'||!v.trim()))fail(400,'invalid','Give this card a choice.');if(typeof v!=='string'||!v.trim()||Array.from(v.trim()).length>max)fail(400,'invalid',`${label} must be 1–${max} characters.`,label==='Name'?{field:'name'}:{});return v.trim();};
 const uid=v=>typeof v==='string'&&/^[a-f0-9-]{36}$/i.test(v);
 const requireId=v=>{if(!uid(v))fail(400,'invalid','That card or path is not valid.');return v;};
 async function hash(pass){const salt=randomBytes(16).toString('hex');return `${salt}:${Buffer.from(await scrypt(pass,salt,32)).toString('hex')}`;}
@@ -70,6 +74,7 @@ async function transition(c,w,p,source,b,rev,change=false){
 }
 async function event(c,w,type,p,cardId,pathId,target=null){await c.query('INSERT INTO events(world_id,type,actor_id,target_player_id,card_id,path_id,rev) VALUES($1,$2,$3,$4,$5,$6,$7)',[w.id,type,p.id,target,cardId,pathId,w.rev]);}
 function media(b){if(!b.media_url)return {kind:null,url:null};let u;try{u=new URL(b.media_url);}catch{fail(400,'media','Paste a complete https link.');}if(u.protocol!=='https:')fail(400,'media','Media links must use https.');if(u.href.length>2048)fail(400,'media','That link is too long.');if(!['image','embed'].includes(b.media_kind))fail(400,'media','Choose an image or a media link.');return {kind:b.media_kind,url:u.href};}
+async function audioUrl(c,w,value,origin){if(value==null||value==='')return null;let u;try{u=new URL(value);}catch{fail(400,'sound',SOUND_ERROR);}if(u.protocol!=='https:'||u.href.length>2048)fail(400,'sound',SOUND_ERROR);const key=u.pathname.startsWith('/media/')?u.pathname.slice(7):'';const found=(await c.query("SELECT key FROM media_uploads WHERE key=$1 AND world_id=$2 AND kind='audio' AND status='ready'",[key,w.id])).rows[0];if(!found)fail(400,'sound','Upload an MP3 or M4A under 2 MB first.');return `${origin}/media/${key}`;}
 async function removeCard(c,w,a,rev){
  await c.query('UPDATE cards SET deleted=true,rev=$2,updated_at=now() WHERE id=$1',[a.id,rev]);
  await c.query("UPDATE paths SET deleted=true,rev=$2 WHERE kind IN ('wormhole','jootsy') AND (from_card_id=$1 OR to_card_id=$1)",[a.id,rev]);
@@ -78,7 +83,7 @@ async function removeCard(c,w,a,rev){
 export default async function handler(req){
  try{
   const url=new URL(req.url);
-  if(url.pathname.startsWith('/media/')){const key=url.pathname.slice(7);if(!/^[a-z0-9-]+\/[a-z0-9-]+\.jpg$/i.test(key))return new Response('Not found',{status:404});const entry=await getStore({name:'jootsy-images',consistency:'strong'}).get(key,{type:'arrayBuffer'});return entry?new Response(entry,{headers:{'content-type':'image/jpeg','cache-control':'public,max-age=31536000,immutable','x-content-type-options':'nosniff'}}):new Response('Not found',{status:404});}
+  if(url.pathname.startsWith('/media/')){if(!['GET','HEAD'].includes(req.method))return new Response('Method not allowed',{status:405});const key=url.pathname.slice(7);if(!/^[a-z0-9-]+\/[a-z0-9-]+\.(jpg|mp3|m4a)$/i.test(key))return new Response('Not found',{status:404});const entry=await mediaStore().get(key,{type:'arrayBuffer'});return entry?mediaResponse(req,entry,key.endsWith('.mp3')?'audio/mpeg':key.endsWith('.m4a')?'audio/mp4':'image/jpeg'):new Response('Not found',{status:404});}
   const parts=url.pathname.split('/').filter(Boolean);const slug=parts[2],route=parts.slice(3),method=req.method;
   if(parts[0]!=='api'||parts[1]!=='w')fail(404,'route','This address does not exist.');
   if(route[0]==='join'&&method==='POST'){
@@ -100,14 +105,22 @@ export default async function handler(req){
   }
   if(route[0]==='state'&&method==='GET')return json(await transaction(slug,async(c,w)=>{
    const p=await auth(c,w,req);const n=Number(url.searchParams.get('since')||0);if(!Number.isSafeInteger(n)||n<0)fail(400,'revision','That revision is not valid.');const since=n>Number(w.rev)?0:n;
-   const cards=(await c.query('SELECT * FROM cards WHERE world_id=$1 AND rev>$2 AND (NOT draft OR author_id=$3) ORDER BY seq',[w.id,since,p.id])).rows.map(a=>a.hidden&&!p.is_instructor?{...a,scenario_title:a.type==='scenario'?'Hidden':a.scenario_title,body:'Hidden by the instructor',media_kind:null,media_url:null,door_label:null,target_card_id:null}:a);
+   const cards=(await c.query('SELECT * FROM cards WHERE world_id=$1 AND rev>$2 AND (NOT draft OR author_id=$3) ORDER BY seq',[w.id,since,p.id])).rows.map(a=>a.hidden&&!p.is_instructor?{...a,scenario_title:a.type==='scenario'?'Hidden':a.scenario_title,body:'Hidden by the instructor',media_kind:null,media_url:null,audio_url:null,door_label:null,target_card_id:null}:a);
    const paths=(await c.query("SELECT p.*, CASE WHEN target.hidden AND NOT $4 THEN 'Hidden' ELSE p.label END AS label FROM paths p LEFT JOIN cards target ON target.id=p.to_card_id WHERE p.world_id=$1 AND p.rev>$2 AND (NOT p.draft OR p.created_by=$3) ORDER BY p.position",[w.id,since,p.id,p.is_instructor])).rows;
    const players=(await c.query('SELECT id,name,is_instructor,last_seen_at FROM players WHERE world_id=$1',[w.id])).rows.map(q=>p.is_instructor?q:{id:q.id,name:q.name});
    const events=(await c.query("SELECT * FROM events WHERE world_id=$1 AND rev>$2 AND (target_player_id=$3 OR actor_id=$3 OR type IN ('session_committed','jootsy')) ORDER BY created_at DESC",[w.id,since,p.id])).rows;
    return {world:w,rev:Number(w.rev),cards,paths,players,events,player:publicPlayer(p),edit_session:await activeSession(c,w,p),full:since===0};
   },true));
   if(route[0]==='uploads'&&method==='POST'){
-   const identity=await transaction(slug,async(c,w)=>({p:await auth(c,w,req),w}),true);const bytes=await req.arrayBuffer();const b=new Uint8Array(bytes);if(bytes.byteLength>3500000||b[0]!==255||b[1]!==216||b[2]!==255)fail(400,'image','Choose a JPEG image smaller than 3.5 MB.');const key=`${identity.w.id}/${randomUUID()}.jpg`;await getStore({name:'jootsy-images',consistency:'strong'}).set(key,bytes,{metadata:{player_id:identity.p.id,world_id:identity.w.id}});return json({url:`${url.origin}/media/${key}`},201);
+   await transaction(slug,async(c,w)=>{await auth(c,w,req);},true);
+   const bytes=await req.arrayBuffer(),data=new Uint8Array(bytes),isSound=url.searchParams.get('kind')==='audio';let type;
+   if(isSound){type=soundType(bytes);if(bytes.byteLength>SOUND_LIMIT||!type)fail(400,'sound',SOUND_ERROR);}
+   else{if(bytes.byteLength>IMAGE_LIMIT)fail(400,'image','Image is over 1.5 MB after resizing. Choose a smaller image.');if(data[0]!==255||data[1]!==216||data[2]!==255)fail(400,'image','Choose a JPEG image under 1.5 MB.');type={extension:'jpg',contentType:'image/jpeg'};}
+   const reservation=await transaction(slug,async(c,w)=>{const p=await auth(c,w,req),count=Number((await c.query("SELECT count(*) AS n FROM media_uploads WHERE world_id=$1 AND player_id=$2 AND status<>'failed'",[w.id,p.id])).rows[0].n);if(count>=60)fail(429,'upload_limit',"You've reached 60 uploads in this game. Continue with text, or ask your instructor for help.");const key=`${w.id}/${randomUUID()}.${type.extension}`;await c.query('INSERT INTO media_uploads(key,world_id,player_id,kind,byte_count) VALUES($1,$2,$3,$4,$5)',[key,w.id,p.id,isSound?'audio':'image',bytes.byteLength]);return {key,worldId:w.id,playerId:p.id};});
+   try{await mediaStore().set(reservation.key,bytes,{metadata:{player_id:reservation.playerId,world_id:reservation.worldId,content_type:type.contentType}});await db().pool.query("UPDATE media_uploads SET status='ready' WHERE key=$1",[reservation.key]);}
+   catch(error){await db().pool.query("UPDATE media_uploads SET status='failed' WHERE key=$1",[reservation.key]);throw error;}
+   return json({url:`${url.origin}/media/${reservation.key}`,kind:isSound?'audio':'image'},201);
+
   }
   return json(await transaction(slug,async(c,w)=>{
    const p=await auth(c,w,req);let b={};if(['POST','PATCH','PUT'].includes(method)&&req.headers.get('content-type')?.includes('json'))b=await req.json();
@@ -138,8 +151,8 @@ export default async function handler(req){
     const a=await path(c,w,b.path_id),session=await activeSession(c,w,p);if(a.created_by!==p.id)fail(403,'forbidden','Only the dealer can write this cell.');
     if(!a.draft||!session||session.id!==a.session_id)fail(409,'session','Write inside your open session.');
     if(a.to_card_id)fail(409,'taken','This cell is already written.',{card_id:a.to_card_id});if(!kinds.includes(a.kind))fail(400,'path','Choose a cell.');
-    const label=text(b.label,60,'Choice'),body=text(b.body,600,'Narrative Fragment'),m=media(b),parent=await card(c,w,a.from_card_id);
-    const made=(await c.query("INSERT INTO cards(world_id,type,author_id,body,media_kind,media_url,parent_path_id,depth,rev,draft,session_id) VALUES($1,'open',$2,$3,$4,$5,$6,$7,$8,true,$9) RETURNING *",[w.id,p.id,body,m.kind,m.url,a.id,parent.depth+1,rev,session.id])).rows[0];
+    const label=text(b.label,60,'Choice'),body=text(b.body,600,'Narrative Fragment'),m=media(b),sound=await audioUrl(c,w,b.audio_url,url.origin),parent=await card(c,w,a.from_card_id);
+    const made=(await c.query("INSERT INTO cards(world_id,type,author_id,body,media_kind,media_url,parent_path_id,depth,rev,draft,session_id,audio_url) VALUES($1,'open',$2,$3,$4,$5,$6,$7,$8,true,$9,$10) RETURNING *",[w.id,p.id,body,m.kind,m.url,a.id,parent.depth+1,rev,session.id,sound])).rows[0];
     await c.query('UPDATE paths SET label=$2,to_card_id=$3,rev=$4 WHERE id=$1',[a.id,label,made.id,rev]);return {card:made,rev:Number(rev)};
    }
    if(route[0]==='scenarios'){
@@ -158,8 +171,9 @@ export default async function handler(req){
     own(a,p);
     if(route.length===2&&method==='PATCH'){
      const body=(a.draft?optionalText:text)(b.body??a.body,600,'Narrative Fragment'),m=media({media_kind:b.media_kind===undefined?a.media_kind:b.media_kind,media_url:b.media_url===undefined?a.media_url:b.media_url});
+     const sound=b.audio_url===undefined?a.audio_url:await audioUrl(c,w,b.audio_url,url.origin);
      if(b.label!==undefined)await c.query('UPDATE paths SET label=$2,rev=$3 WHERE id=$1',[a.parent_path_id,(a.draft?optionalText:text)(b.label,60,'Choice'),rev]);
-     return {card:(await c.query('UPDATE cards SET body=$2,media_kind=$3,media_url=$4,rev=$5,updated_at=now() WHERE id=$1 RETURNING *',[a.id,body,m.kind,m.url,rev])).rows[0]};
+     return {card:(await c.query('UPDATE cards SET body=$2,media_kind=$3,media_url=$4,rev=$5,audio_url=$6,updated_at=now() WHERE id=$1 RETURNING *',[a.id,body,m.kind,m.url,rev,sound])).rows[0]};
     }
     if(route.length===2&&method==='DELETE'){
      if((await pathsOf(c,a.id)).some(x=>!links.includes(x.kind)))fail(409,'written','A path leaves this card, so it cannot be deleted.');
