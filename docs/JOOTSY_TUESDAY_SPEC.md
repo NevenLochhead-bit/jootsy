@@ -1,6 +1,6 @@
-# Jootsy! — Tuesday Spec (for Codex) — v3
+# Jootsy! — Tuesday Spec (for Codex) — v4
 
-> **v3 (Tue Nov 10, 00:40 ET): read §15 first.** It changes the model: every card is the same, any player cuts from any written card, and a cut deals blank cards only its author writes. §15 overrides §3–§8 wherever they differ.
+> **v4 (Tue Nov 10, 08:30 ET): read §16 first.** §16 is the Designer's feedback after playing v3: a three-stage editing session with Commit, Board and Cards as the two views, Jootsy! today, Dead End and blank cards on the board removed. §16 overrides §15 and everything before it wherever they differ. §15 (v3) is what is deployed at `cd96e44`.
 
 *From the architect. Sections 1–14 are v2, as built and deployed at `2c16471`; **§15 (v3) is the change to build now.** Self-contained: you do not need the brief to build this. Deadline: deployed and tested before **Tuesday Nov 10, 2026, 10:00 am ET**. Class is at 12:30 pm with 33 first-year students, many on phones.*
 
@@ -385,3 +385,134 @@ Regenerate or keep the `stress` world as you prefer, as long as it has ~300 card
 - **Before migrating, take a database snapshot or branch** and write down, in your report, the exact step that restores it. `mdst1050` holds no student cards before class, so a restore loses nothing.
 - Known-good release: `main` at `2c16471`. v3 must be deployed and re-verified by **09:00 ET Tuesday**. If it is not, restore the snapshot, redeploy `2c16471`, and say so in the first line of your report.
 - **Deploy budget: v3 reaches production in at most 3 deploys** (see F7). Build and test off `main`. Do not put QA writing in `mdst1050`.
+
+## 16. Change v4 — the session editor, Board and Cards, Jootsy! today
+
+Source: Neven's notes after playing v3 (Nov 10, 08:07 ET). His words are quoted where the wording matters. Class is at 12:30 pm ET; the timetable in §16.9 is part of the spec.
+
+**The game in five sentences.** You open any card on the Board and choose what happens next. That opens a short editing session: the card you started from, then up to two transitions' worth of new cards, laid out left to right. Nothing in a session is visible to anyone else until you **Commit to the board**. The Board only ever shows committed cards. To keep going, open your latest card and start another session.
+
+### 16.1 Data (additive only, so v3 code still runs against it)
+
+- `cards.draft boolean NOT NULL DEFAULT false`; `paths.draft boolean NOT NULL DEFAULT false`. A draft row belongs to a session and is visible only to the player who made it.
+- `paths.kind` already allows `jootsy`.
+- Migration: set every `dead_end` card to `open`; tombstone every unwritten path (blank card) left over from v3; set `jootsy_enabled = true` and `jootsy_min_cards = 5` in every world.
+- `GET /state` never returns another player's draft cards or draft paths. For non-instructors it also returns "Hidden" as the label of any path whose `to_card_id` is a hidden card, and hiding or unhiding a card stamps that path's `rev` (this closes F8).
+
+### 16.2 Session rules (these replace C4, C5 and C6; C1–C3 and C7–C10 stand unless changed here)
+
+- **S1. Anchor.** A session starts from any committed card: your own, another player's, or a scenario. The anchor is stage 1. It is read-only in the session.
+- **S2. One session.** A player has at most one open session per world. Trying to start another returns `409` with the open session's anchor; the UI offers **Resume** or **Discard**.
+- **S3. Transitions.** From the anchor, or from a written card in the session, the player chooses what happens next:
+  - `fork` → two blank cells; `destiny` → one; `dream` → one;
+  - `wormhole` → a link to one of the player's own committed cards. The source must be the player's own card (not a peer's anchor, not a scenario);
+  - `jootsy` → a link to a committed, non-hidden card **by another player**. The source must be the player's own card. Allowed only if `jootsy_enabled` and the player has at least `jootsy_min_cards` committed cards (instructors exempt).
+  One transition per card per session.
+- **S4. Three stages.** *"You get three stages of cells to build, and then you have to Commit to the board."* A transition may start only from the anchor or from a session card whose parent is the anchor. A stage-3 card offers no transition until committed. The server refuses with `409`: "Commit to the board, then keep going."
+- **S5. Writing.** A cell is written with a name (1–60), a fragment (1–600) and optional media. It autosaves as a draft card when the name and fragment are both present, and on every later edit (debounced about 2 s, and on blur). Drafts survive reload and a change of device.
+- **S6. Change.** The transition leaving a card in the session can be changed:
+  - Destiny ↔ Dream: the kind changes; the card and its content stay.
+  - Destiny or Dream → Fork: the existing card stays on top; a new blank cell appears beneath it.
+  - Fork → Destiny or Dream: the top cell stays; the second is removed.
+  - anything → Wormhole or Jootsy!: its cells, and anything built beyond them, are removed and the picker opens.
+  - Wormhole or Jootsy! → Fork, Destiny or Dream: the link is removed and blank cells appear.
+  After a change the **Change** button reads **Undo** until the player's next action; Undo restores the previous transition and everything that was removed, content included. The client holds what was removed and re-creates it.
+- **S7. Commit.** Allowed when the session has at least one new card or link and **no blank cell** (a Fork needs both of its cards written; to commit with one, Change it to a Destiny). One transaction makes every draft row committed and stamps `rev`. Events: `card_played` for each card; `card_cut` to the anchor's author if that is another player; `jootsy` to the author of each Jootsy! target.
+- **S8. Discard** deletes every draft row of the session.
+- **S9. After commit** a card's author may still edit its name, fragment and media, delete it while nothing leaves it (C8), and discard their own wormhole or Jootsy! links. Changing a committed transition is not in this version.
+- **S10. Dead End is retired.** No button, no state. *"It should be implied that a card that goes nowhere is a dead end."*
+- **S11. No blank cards on the Board, ever.** The blank-card cap (C6) and other players' blank cards are gone with them.
+
+### 16.3 API
+
+Reuse the v3 routes with draft semantics; add three.
+
+| Method and path | Body | Does |
+|---|---|---|
+| `POST /cards/:id/cuts` | `{kind, to_card_id?}` | S1–S4. Creates draft paths (and for wormhole/jootsy a draft link). Starts the session if none is open. |
+| `PUT /cards/:id/cut` | `{kind, to_card_id?}` | S6, on a draft transition only. |
+| `POST /plays` | `{path_id, label, body, media_kind?, media_url?}` | S5. Creates the draft card on the player's own draft cell. |
+| `PATCH /cards/:id` | as v3 | Autosave for drafts; edit for committed cards (S9). |
+| `POST /session/commit` | | S7. |
+| `DELETE /session` | | S8. |
+| `GET /state` | | As §16.1. Include the caller's own drafts, flagged. |
+
+`POST /cards/:id/dead-end` returns `410`.
+
+### 16.4 Two views: Board and Cards
+
+A toggle at the top of every screen: **Board · Cards**. Beside it: **Refresh**, **Me**, and the instructor gear. "Card view" as a name is retired.
+
+**Board** (the map; *"I like that the map is automatically organized by the system. This is key."* Do not change the layout engine.)
+
+- **Players panel docked on the left**, always visible on desktop (a drawer on narrow screens): two columns, name and **cards played**, most first. Tap a name to light that player's cards. When a player commits, their row lights up for about 3 seconds for everyone, on the next poll.
+- Controls: **Fit**, **Find me**, **My Cards** (was "Mine"), one toggle for **Wormholes & Jootsies**. Remove the **Face-down** toggle.
+- **Scenarios are circles.** Cards stay portrait rectangles in the colour of the transition that leads into them.
+- **Wormholes and Jootsies are dotted lines** (keep), white and pink. A card with a Jootsy! leaving it **sparkles continuously** (a cheap twinkle; a few points of light, not a particle system).
+- **Reading a card on the Board.** Double-click a card (single tap on touch): it enlarges over the Board, large enough to read: name, media, fragment, author. Under it, **its options as buttons: the names of the cards that leave it**, each in its transition's colour; wormholes and Jootsies as dotted buttons. Clicking an option walks to that card in the same overlay and recentres the Board behind it. **← Back** (the previous step of the walk) is always there, and **Close**. This overlay is the game's play mode; there is no separate Street View screen.
+- In the overlay, to the right of the card: **What happens next?** with the transition buttons (§16.5). Choosing one opens the editor with this card as stage 1 and that transition in place. This works on a peer's card as well as your own.
+- Hover (or tap) on a connection shows its word, as now.
+
+**Cards** (your own work)
+
+- A list of the cards you have played, grouped by thread, newest thread first. Selecting one shows it **one card at a time**, with previous and next along your own timeline, **Edit** (name, fragment, media) and **What happens next?**
+- If you have an open session, Cards opens straight into it.
+
+### 16.5 The editor (a session)
+
+Desktop first. On narrow screens the same layout scrolls horizontally.
+
+- **Three columns, left to right:** stage 1 (the anchor, read-only), stage 2, stage 3. A Fork shows its two cells **one above the other**, with an arrow to each. Each arrow is in its transition's colour with its icon; under the arrow, **Change** (S6).
+- **Transition buttons sit to the right of the card you are editing**, each with its icon, always in this order, and **they never disappear** however many times each has been used. Unavailable ones are dimmed and say why on hover. Hovering (tap-and-hold on touch) shows exactly these lines:
+  - **Fork** — Two paths forward
+  - **Destiny** — One way forward
+  - **Dream** — Anything can happen
+  - **Wormhole** — Jump to previous card
+  - **Jootsy!** — Jump into another timeline
+  Dimmed reasons: Wormhole with no committed card of your own: "Play a card first." Jootsy! below the threshold: "{n} of 5 cards played." Any button on a stage-3 card: "Commit to the board, then keep going."
+- The heading over the buttons is **"What happens next?"** It replaces "How does it cut?" everywhere.
+- **A cell:** **Name** at the top, the fragment, **Add image · Paste a link**.
+- **The name is the option.** As the player types a cell's name, the same text appears live as a button at the bottom of the previous card. This is how they learn that a card's name is what a reader clicks.
+- **Wormhole:** a small dropdown of the cards the player has played. **Jootsy!:** a searchable dropdown of every committed card by other players, as "*name* — author", with the line "Find the card you want on the Board first."
+- When a transition is chosen, the view slides so the new cell(s) are in view beside the card just written.
+- **Commit to the board** (primary). Disabled, with the reason on hover, until S7 holds. **Discard session** (quiet, confirms).
+- **On commit:** switch to the Board, centred on the new cards; they **illuminate briefly** (about 1.5 s) and **a short, pleasing sound** plays (synthesised with Web Audio, under one second, no audio file; a mute control in **Me**). Everyone else sees the player's row light up (§16.4).
+- **A Jootsy! is an event.** When a poll brings in a new Jootsy! link, every player sees a toast: "🎆 Jootsy! {name} jumped into {author}'s timeline." The author's news says the same and links to the card.
+
+### 16.6 Removed
+
+The Dead End button; the Face-down toggle; blank cards and card backs anywhere outside the editor; the locked Jootsy! card; "How does it cut?"; the "Mine" label; the separate Card view screen (its reading role moves to the Board overlay, its writing role to the editor).
+
+### 16.7 Tier 2 — polish, only after Tier 1 (§16.1–16.6) is deployed and Neven has said go
+
+In this order; stop wherever time runs out.
+
+1. **Arrowheads sit on their lines.** They currently drift off the curve (Designer screenshot). Compute each head from the curve's end tangent.
+2. **Energy along the lines.** *"A little thing where the lines swell or glow a bit and move that glow forward, as if electricity is passing through."* One soft glow travelling each connection in its direction, slow. Low drain: no per-frame layout, 30 fps cap, paused when the tab is hidden, off under `prefers-reduced-motion`, and reduced to the connections on screen when there are more than 300.
+3. **Refresh.** The button runs a sync, sweeps a scan line across the Board once, and says **"Board is synced!"**
+4. Colour pass: every card and connection clearly in its transition's colour, in the editor, the overlay and the Board.
+
+### 16.8 Acceptance
+
+1. Desktop, new player: Board → double-click a scenario → Fork → editor shows the scenario, two stacked cells, arrows → write both → from one, Destiny → write it → no transition buttons work on that stage-3 card → Commit → Board centred on three lit cards, sound plays.
+2. Until Commit, a second browser sees none of it. After Commit it sees all three within 5 s, and the first player's row lights up.
+3. Typing a cell's name shows the same text as a button on the previous card as it is typed.
+4. Change: Dream → Destiny keeps the card; Destiny → Fork adds a cell beneath; Fork → Destiny removes the second; → Wormhole opens the dropdown and removes the cells; **Undo** restores each, content included.
+5. Commit is refused, with a reason, while any cell is blank.
+6. Reload mid-session and log in on a second device: the session is there, intact. A second session cannot be started; Resume and Discard work.
+7. From a peer's card on the Board: read it in the overlay, choose Dream, write, commit. The peer's news says so. Wormhole and Jootsy! are dimmed there.
+8. Jootsy!: dimmed below five cards with the count; at five, the dropdown lists only other players' committed cards; after Commit the link is a dotted pink line, the source card sparkles, everyone sees the toast, the target's author has news.
+9. Wormhole: lists only the player's own committed cards; dotted line on the Board.
+10. Board overlay: options are the names of the next cards; walking forward and **Back** work across several steps, including through a wormhole and a Jootsy!.
+11. No Dead End, no Face-down toggle, no blank card, no "How does it cut?" anywhere. "My Cards" and the left Players panel with counts are present. Scenarios are circles.
+12. Hidden card: students see neither its fragment nor its name.
+13. Transition buttons are all still present after each has been used several times.
+14. v3 sandbox and `stress` content still reads and walks correctly.
+
+### 16.9 Timetable, rollback, deploy budget (all ET)
+
+- **By 10:30** — Tier 1 in production, verified by you against §16.8. Report immediately.
+- **10:30–11:00** — Neven plays it. He is the only person who can judge it.
+- **11:00 — go / no-go, his call.** No-go: republish the v3 deploy for `cd96e44` (code only; the schema change is additive), then delete draft rows and `jootsy` paths so v3 never meets them. Give the exact statements in your report.
+- **After go** — Tier 2, last production deploy by **11:45**. **Nothing deploys after 12:00.**
+- **Deploy budget:** at most 4 production deploys for all of v4. No QA writing in `mdst1050`.

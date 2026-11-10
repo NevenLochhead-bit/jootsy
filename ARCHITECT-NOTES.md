@@ -2,18 +2,18 @@
 
 ## Current focus
 
-- **State (Tue Nov 10, 01:20 ET):** **v3 is deployed** (`main`, code `cd96e44`) and I have reviewed it (Review 2 below). **No blocking defect. v3 is go for class** on the Engineer's evidence plus my code review. One should-fix (F8), to be batched, not deployed alone.
-- **What I have not done:** played it. I do not create logins or type passcodes on the live site, and nobody is signed into the sandbox in the browser pane. The feel of the loop is unreviewed by me.
-- **Next to act: Neven.** Ten minutes in `jootsy.netlify.app/sandbox` as a student, on his phone if possible: cut, write, cut; open the Map; tap a player. That closes the two open checks (feel, and real-phone pan and pinch). Anything he dislikes comes back to me as a Designer item.
-- **Next to act: Engineer.** F8 and F10 together, in one deploy, by 09:00 ET. Nothing else.
-- **The Tuesday spec stays frozen at v3.**
-- **Class:** Tue Nov 10, 12:30 pm ET. Fallback remains `2c16471` with the v2 database backup (see `V3-REPORT.md`); a restore needs Neven's confirmation and must not happen after students have written.
+- **State (Tue Nov 10, 08:35 ET):** v3 is live (`cd96e44`) and Neven has played it. His notes (08:07) ask for a different way of writing: a three-stage editing session with Commit, Board and Cards as the two views, Jootsy! today, no Dead End, no blank cards on the Board. **Spec v4** is issued: `docs/JOOTSY_TUESDAY_SPEC.md` §16, branch `architect`.
+- **Next to act: Engineer.** §16, Tier 1 (§16.1–16.6), in production and verified against §16.8 **by 10:30 ET**. Tier 2 (§16.7) only after Neven says go. At most 4 production deploys. F8 is folded into §16.1; F10 is moot.
+- **Then: Neven, 10:30–11:00 ET.** He plays it and makes the go / no-go call at 11:00. I review the code in parallel; I cannot play it.
+- **No-go path:** republish the v3 deploy. v3 works today and is the fallback.
+- **Nothing deploys after 12:00 ET.** Class is 12:30.
+- **Neven as Designer:** four calls of mine to veto, under "Designer → For him to veto". None blocks the Engineer.
 
 ## Where things are
 
 | What | Where |
 |---|---|
-| The spec (v3) | `docs/JOOTSY_TUESDAY_SPEC.md` on branch `architect` |
+| The spec (v4; §16 is the change to build) | `docs/JOOTSY_TUESDAY_SPEC.md` on branch `architect` |
 | Build plan for Neven (v2; out of date since v3) | `docs/JOOTSY_BUILD_PLAN.md` on branch `architect` |
 | These notes | `ARCHITECT-NOTES.md` on branch `architect` |
 | Engineer's reports | `FINAL-REPORT.md`, `ENGINEER-REPORT.md`, `SLICE-B-REPORT.md` on `main` |
@@ -46,22 +46,30 @@ Decided (newest last; a later row overrides an earlier one):
 | Nov 10 | **Who writes what.** "Whoever writes a card names it, yes. A fork deals two blank cards, destiny deals one blank card, dream deals one blank card. The forker names the card. They author that transition. You can't write in someone else's transition, but you can subsequently fork from it." **This reverses my v2 rule** (anyone may write on any unwritten path). Now: blank cards belong to whoever cut; anyone may cut from any written card. |
 | Nov 10 | **Five cards anywhere.** "They will automatically stick to their own." **Jootsy! unlocks after five.** |
 | Nov 10 | **"Describe an image"** as an option, with AI making the image later. v3 stores the description only (§15.7), built last. |
+| Nov 10, 08:07 | **After playing v3 — the session editor.** A left-to-right chain; "you get three stages of cells to build, and then you have to Commit to the board"; the card you opened from is the first stage, so a session is "chunks of two transitions"; then reopen your latest card to keep going. Transition buttons to the right of the card, with one-line definitions on hover. **Change** under each arrow, becoming **Undo**. |
+| Nov 10, 08:07 | **Board and Cards.** "Card View should become Cards and it should be a toggle at the top next to Board." Cards = the cards you have played, one at a time, to edit. Double-clicking a peer's card on the Board opens it large enough to read, without leaving the Board; from there it can be opened in a session. "I like that the map is automatically organized by the system. This is key." |
+| Nov 10, 08:07 | **Wording.** "What happens next?" replaces "How does it cut?". "Mine" becomes "My Cards". Fork: Two paths forward. Destiny: One way forward. Dream: Anything can happen. Wormhole: Jump to previous card. Jootsy: Jump into another timeline. |
+| Nov 10, 08:07 | **The name is the option.** The name written on a card appears, as it is typed, as a button on the card before it. |
+| Nov 10, 08:07 | **Removed:** Dead End ("a card that goes nowhere is a dead end"; the game always has a back button); the Face-down toggle; the blank Jootsy! card on the table. |
+| Nov 10, 08:07 | **Jootsy! today.** "Their goal is five cards minimum, and one Jootsy." The Jootsy! picker lists all cards played; students find the name on the Board first. Wormhole picker lists their own cards. A Jootsy! card "sparkles continuously". |
+| Nov 10, 08:07 | **Board feel.** Players panel on the left with a cards-played column; a name lights up when that player commits. Committed cards illuminate briefly with "a pleasing sound". Scenarios are circles. Wormholes and Jootsies stay dotted. A Refresh button that scans and says "Board is synced!". Energy flowing along the lines, "but I also don't want this to overwhelm the system". Arrowheads must sit on their lines. Desktop first; horizontal scroll on mobile. |
 
 For him to veto (my calls inside his rules; they stand unless he objects):
 
-1. **A cap of 8 blank cards per player**, so nobody litters the map with unwritten cards (C6).
-2. **Nobody can cut from a Dead End**, and only a card's author can declare one (C4).
-3. **Wormholes start from your own cards only** (C3).
+1. **Sessions are saved on the server as drafts**, invisible to everyone else until Commit. Not in the browser only: a closed tab must not lose a student's writing.
+2. **One open session at a time.** Commit or discard before starting another.
+3. **A Fork needs both cards written to commit.** To commit one, Change it to a Destiny. Otherwise the Board fills with one-legged forks.
+4. **Jootsy! still unlocks at five cards**, as he decided last night; instructors are exempt so he can demo it. A Jootsy! and a Wormhole can only leave a card you wrote.
+5. **Transitions on committed cards cannot be changed today.** Change works inside a session only.
 
-Open, none needed before Tuesday:
+Open, none needed before class:
 
-- The word "cut" in player-facing copy. His to confirm or replace.
-- Cut buttons on the card's edges. His idea; my counter-offer is fixed meanings per edge. Thursday at the earliest.
-- "Describe an image": who generates the images, and when. Nothing generates until he says.
+- "Describe an image": who generates the images, and when.
+- Cut buttons on the card's edges (his idea of last night; superseded for now by "buttons to the right of the card").
 
 ## Thursday list
 
-- Jootsy!: a cut from your card into another player's written card; unlocks at five cards; the event, the notice, the live ticker.
+- Changing a transition after commit.
 - Backwriting by inserting a card into your own thread.
 - Sound and video uploads.
 - "Describe an image" (§15.7), not built on Tuesday.
@@ -128,6 +136,8 @@ None open.
 ## Handoff log
 
 Newest first. Each entry: commit or file, what is ready, who acts next. (Entries I logged earlier tonight carried times about an hour fast; the times below are from the commits.)
+
+- **Nov 10, 08:35 ET — Architect.** `docs/JOOTSY_TUESDAY_SPEC.md` → **v4**: new §16 from the Designer's notes after playing v3. Additive schema (`draft` flags), session rules S1–S11, Board/Cards, the editor, Jootsy!, removals, Tier 2 polish, acceptance (§16.8), timetable and rollback (§16.9). F8 folded in; F10 moot; "frozen at v3" lifted by the Designer. **Next: Engineer** — Tier 1 by 10:30 ET.
 
 - **Nov 10, 07:35 ET — Architect.** `ARCHITECT-NOTES.md`: new F10 (the label on another player's blank card is unclear; Designer report). **Next: Engineer** — F8 and F10 together, one deploy, by 09:00 ET.
 
