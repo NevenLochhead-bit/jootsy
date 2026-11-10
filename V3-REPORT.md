@@ -1,13 +1,13 @@
 # Jootsy v3 engineering report
 
-Status: v3 model and migration acceptance pass in disposable Postgres on engineer-v3. Browser verification follows publication. No v3 production deploy yet.
+Status: v3 is deployed and core acceptance passes. Code `ee9b428` / PR #1. Final player-filter accessibility correction is being verified for production deploy 2 of the maximum 3; no model or migration changes in that correction.
 
 Spec: `architect` at `d94e022`, docs/JOOTSY_TUESDAY_SPEC.md §15. Class URL: https://jootsy.netlify.app/mdst1050 ; QA only: https://jootsy.netlify.app/sandbox . Same managed Netlify Postgres and Netlify Blobs image storage. No retention click required. Instructor passcode unchanged and delivered privately, never in this public repo.
 
 ## Review 1
 
 - F1 yes: independent random 32-byte signing secret configured, Functions scope. Code now refuses a missing/short signing key; no passcode fallback.
-- F7: 15 v2 production attempts, 14 completed / 1 failed installation. Branch builds were off; previews have now been disabled. All transport and report-only commits use `[skip netlify]`; expanded source is tested with disposable PostgreSQL before its bot commit. Runtime-only ignore rule is a second guard. Target: one v3 production deploy, with at most two corrections/rollback deploys.
+- F7: 15 v2 production attempts, 14 completed / 1 failed installation. Branch builds were off; previews have now been disabled. All transport and report-only commits use `[skip netlify]`; expanded source is tested with disposable PostgreSQL before its bot commit. Runtime-only ignore rule is a second guard. One v3 production deploy published, with one final accessibility correction queued. Expected total: two of the maximum three. No branch or preview deploy was created.
 - F3: hashes prepared before the join world lock; verification remains inside to avoid a reset/login race.
 - F5: duplicate-name error now tells newcomers to choose another name.
 - F6: main ARCHITECT-NOTES.md is a pointer only; Architect's branch is authoritative. ENGINEER-HANDOFF.md holds engineering updates.
@@ -31,4 +31,26 @@ If v3 cannot pass by 09:00 ET, restore the native v2 backup via the Restore butt
 
 ## Verification
 
-Passed off-main: disposable Postgres concurrency, ownership, migration and stress geometry (Expand source bundle runs 11 and 12). Pending: sandbox UI, incoming colours/arrows, Players panel and two-browser updates; no-ring Map; retained media; no QA writing in mdst1050.
+| Acceptance | Result and evidence |
+|---|---|
+| §15.9 1: phone loop | PASS at 360px: fresh join → scenario → Fork → write → play → Fork again, 43.044s. Engineer-run, not a novice usability study or physical-phone timing. |
+| 2: another player cuts / news | PASS: Bob dreamed from the new player's written card; one Bob-owned blank appeared, and author news linked back to that card. |
+| 3: blank ownership | PASS: live API rejects foreign write/rename/discard with 403. Other blanks are dimmed, disabled and have no discard control. |
+| 4: updates | PASS in Chrome + in-app browser: blank 2.588s; new written card 2.09s. Neither receiver reloaded. |
+| 5: ten simultaneous forks | PASS in disposable Postgres and live sandbox: twenty distinct blank cards, no errors. |
+| 6: eight-blank cap | PASS: ninth refused with exact C6 message, discard frees capacity. |
+| 7: Wormhole | PASS UI and API: only own source, own other targets, no self target; black door walked to target. |
+| 8: Dead End | PASS: outgoing paths prevent it; new cuts refused on a dead end; Undo and Back to the last fork walked correctly in browser. |
+| 9: delete / reopen | PASS: a leaf deletes and becomes its dealer's blank again; any outgoing tree path prevents delete; own wormholes are cleaned up. Browser author rename/delete also checked. |
+| 10: author permissions | PASS live API 403 and absent foreign edit/delete controls. |
+| 11: incoming colours / arrows | PASS: Dream card frame `--suit:var(--dream)`, yellow Map card, outward coloured arrows. No permanent connection words; tapping a connection revealed Fork. |
+| 12: no rings / depth / overlap | PASS: Map has no ring drawing/labels. Disposable stress check confirms radius from depth, deterministic geometry and no node overlap. Fit works at desktop and 360px. |
+| 13: Players | PASS: names sorted by played count, Bob at 5; author tap selects his timeline; second tap clears. Final correction makes selected state readable as true/false to assistive technology. |
+| 14: migration | PASS: all 300 legacy stress cards and 40 doors converted and remain walkable; old sandbox card “Touch the silver” retained native video, readyState 4, 960×540, 5.055s. |
+| Retained §12 12: scenario admin | PASS: scenario created without starting paths appears to student in 2.83s. |
+| Retained §12 14–16 | PASS: Map → Card → Map centres same card; returning identity and wrong passcode checked; literal script text renders as text. |
+| Retained §12 17 | PARTIAL: warm stress reload + Map draw 0.812s on this computer; desktop pan/zoom and 360px Fit pass. Real mid-range-phone speed and hardware pinch remain untested. |
+
+Source-expansion runs 11, 12 and 13 passed off main before PR #1 merged: syntax, supported media and identity backs, disposable PostgreSQL model/concurrency/migration/geometry and build. The live sandbox API harness also passed every v3 check after deployment. The in-app browser console had no errors; Chrome reported extension message-channel errors during the walkthrough, with no app failure observed.
+
+No QA writing was put in mdst1050. QA scenario and writing remain in sandbox. All test identities are synthetic. A physical-phone check is the only remaining hardware evidence; “Describe an image” remains intentionally omitted under §15.7.
