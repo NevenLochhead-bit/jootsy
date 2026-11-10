@@ -1,3 +1,5 @@
+DO $jootsy_v3$
+BEGIN
 -- A transaction-consistent, server-only copy of every v2 game row before conversion.
 LOCK TABLE worlds,players,cards,paths,events IN ACCESS EXCLUSIVE MODE;
 CREATE SCHEMA jootsy_v2_snapshot;
@@ -29,3 +31,6 @@ INSERT INTO paths(world_id,from_card_id,label,created_by,position,rev,kind,to_ca
 UPDATE cards c SET type=CASE WHEN c.type='dead_end' THEN 'dead_end' ELSE 'open' END,
  door_label=NULL,target_card_id=NULL,rev=w.rev FROM worlds w WHERE c.world_id=w.id AND c.type<>'scenario';
 CREATE INDEX blank_cards_by_dealer ON paths(world_id,created_by) WHERE NOT deleted AND to_card_id IS NULL;
+
+END
+$jootsy_v3$;

@@ -1,6 +1,6 @@
 # Jootsy v3 engineering report
 
-Status: implementation under off-main verification. No v3 production deploy yet.
+Status: v3 model and migration acceptance pass in disposable Postgres on engineer-v3. Browser verification follows publication. No v3 production deploy yet.
 
 Spec: `architect` at `d94e022`, docs/JOOTSY_TUESDAY_SPEC.md §15. Class URL: https://jootsy.netlify.app/mdst1050 ; QA only: https://jootsy.netlify.app/sandbox . Same managed Netlify Postgres and Netlify Blobs image storage. No retention click required. Instructor passcode unchanged and delivered privately, never in this public repo.
 
@@ -31,4 +31,4 @@ If v3 cannot pass by 09:00 ET, restore the native v2 backup via the Restore butt
 
 ## Verification
 
-Pending: disposable Postgres concurrency, ownership, migration and stress geometry; sandbox UI, incoming colours/arrows, Players panel and two-browser updates; no-ring Map; retained media; no QA writing in mdst1050.
+Passed off-main: disposable Postgres concurrency, ownership, migration and stress geometry (Expand source bundle runs 11 and 12). Pending: sandbox UI, incoming colours/arrows, Players panel and two-browser updates; no-ring Map; retained media; no QA writing in mdst1050.
