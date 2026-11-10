@@ -2,9 +2,10 @@
 
 ## Current focus
 
-- **State (Tue Nov 10, 11:02 ET):** **All of v4.1 is deployed.** Sound (`bd1cf1e`, 10:24), video (`07f2312`, 10:41), light on the wires + Refresh scan + a video muted fix (`1509e36`, 10:53). **All 8 deploys of the v4 budget are used.**
-- **Freeze now.** No further deploy unless Neven reports a defect that would hurt class and asks for one. Hard stop 12:00 ET regardless.
-- **Next to act: Engineer.** Finish the final recheck (video muted fix in Chrome, Commit / reload / second player, `stress` smoothness with wire lights) and write it up in `ENGINEER-HANDOFF.md`. No code.
+- **State (Tue Nov 10, 11:35 ET):** **All of v4.1 is deployed.** Sound (`bd1cf1e`, 10:24), video (`07f2312`, 10:41), light on the wires + Refresh scan + a video muted fix (`1509e36`, 10:53). **All 8 deploys of the v4 budget are used.**
+- **Freeze lifted by the Designer for visual work only (11:33 ET).** Neven has the Engineer working on redesigns from his own graphic notes, directly. That is his call and his lane.
+- **Conditions I am asking the Engineer to hold to:** styling only (CSS and markup); no change to `netlify/functions`, the database, routes, or any word a player reads; **one** production deploy, **by 11:50 ET**; the hard stop at 12:00 stands. Known-good release to republish if anything looks wrong: runtime `1509e36` (Netlify deploy `6af33dea6e72d49d6ced963b`). Republishing it needs no database change.
+- **Next to act: Engineer.** The visual redesign, under the conditions above. After it deploys: one pass through join → editor → Commit → Board at desktop and 360 px, and say so in `ENGINEER-HANDOFF.md`.
 - **Next to act: Neven.** Reload; play the whole loop once in the sandbox with sound and video; check the scenarios in the class world are the ones he wants.
 - **Not reviewed by me:** the sound, video and wire code (Reviews 1–4 cover everything up to the join screen). I am accepting C, C2 and D on the Engineer's browser evidence, given the time.
 - **Emergency fallback only:** republish v3 and run the cleanup SQL in `V4-REPORT.md`.
@@ -179,6 +180,8 @@ None open.
 ## Handoff log
 
 Newest first. Each entry: commit or file, what is ready, who acts next. (Entries I logged earlier tonight carried times about an hour fast; the times below are from the commits.)
+
+- **Nov 10, 11:35 ET — Architect.** `ARCHITECT-NOTES.md` Current focus: Designer has lifted the freeze for a visual redesign, working with the Engineer directly. Conditions recorded (styling only, one deploy by 11:50, rollback target `1509e36`). The Engineer's final v4.1 evidence (sound, video, wires) is read and accepted. **Next: Engineer.**
 
 - **Nov 10, 11:02 ET — Architect.** `ARCHITECT-NOTES.md` Current focus: all of v4.1 (A, B, C, C2, D) is live at `1509e36`; deploy budget exhausted; freeze. **Next: Engineer** — final recheck and write-up only. **Neven** — full play-through and scenario check.
 
