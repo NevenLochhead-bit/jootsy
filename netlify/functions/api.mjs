@@ -8,7 +8,7 @@ let database;
 const db=()=>database??=getDatabase(env('NETLIFY_DB_URL')?{connectionString:env('NETLIFY_DB_URL')}:undefined);
 class Fault extends Error { constructor(status,error,message,extra={}){super(message);Object.assign(this,{status,error,extra});} }
 const fail=(status,code,message,extra)=>{throw new Fault(status,code,message,extra);};
-const text=(v,max,label)=>{if(typeof v!=='string'||!v.trim()||Array.from(v.trim()).length>max)fail(400,'invalid',`${label} must be 1–${max} characters.`);return v.trim();};
+const text=(v,max,label)=>{if(label==='Choice'&&(typeof v!=='string'||!v.trim()))fail(400,'invalid','Give this card a choice.');if(typeof v!=='string'||!v.trim()||Array.from(v.trim()).length>max)fail(400,'invalid',`${label} must be 1–${max} characters.`);return v.trim();};
 const uid=v=>typeof v==='string'&&/^[a-f0-9-]{36}$/i.test(v);
 const requireId=v=>{if(!uid(v))fail(400,'invalid','That card or path is not valid.');return v;};
 async function hash(pass){const salt=randomBytes(16).toString('hex');return `${salt}:${Buffer.from(await scrypt(pass,salt,32)).toString('hex')}`;}
@@ -82,17 +82,19 @@ export default async function handler(req){
   const parts=url.pathname.split('/').filter(Boolean);const slug=parts[2],route=parts.slice(3),method=req.method;
   if(parts[0]!=='api'||parts[1]!=='w')fail(404,'route','This address does not exist.');
   if(route[0]==='join'&&method==='POST'){
-   const b=await req.json(),name=text(b.name,40,'Name'),key=name.toLocaleLowerCase('en-CA');
-   if(typeof b.passcode!=='string'||b.passcode.length<4||b.passcode.length>128)fail(400,'passcode','Choose a passcode with 4–128 characters.');
+   const b=await req.json();if(!['new','returning'].includes(b.mode))fail(400,'mode',"Choose 'I'm new' or 'I've played before'.",{field:'name'});
+   const name=text(typeof b.name==='string'?b.name.trim().replace(/\s+/g,' '):b.name,40,'Name'),key=name.toLocaleLowerCase('en-CA');
+   if(typeof b.passcode!=='string'||b.passcode.length<4||b.passcode.length>128)fail(400,'passcode','Choose a passcode with 4–128 characters.',{field:'passcode'});
    const adminPass=env('INSTRUCTOR_PASSCODE');if(!adminPass)fail(503,'setup','The instructor passcode has not been configured.');
    const [newHash,adminHash]=await Promise.all([hash(b.passcode),hash(adminPass)]);
    return json(await transaction(slug,async(c,w)=>{
-    const existingAdmin=(await c.query("SELECT id FROM players WHERE world_id=$1 AND name_key='neven'",[w.id])).rows[0];
+    let p=(await c.query("SELECT * FROM players WHERE world_id=$1 AND regexp_replace(name_key,'\\s+',' ','g')=$2 LIMIT 1",[w.id,key])).rows[0];
+    if(b.mode==='new'&&(p||key==='neven'))fail(409,'name_taken',"That name is taken. Add an initial, or choose 'I've played before'.",{field:'name'});
+    if(b.mode==='returning'&&!p&&key!=='neven')fail(404,'name_missing',`No player called '${name}' in this game. Check the spelling, or choose 'I'm new'.`,{field:'name'});
+    if(b.mode==='returning'&&!await matches(b.passcode,p?.pass_hash||adminHash))fail(401,'passcode',"That passcode doesn't match. Ask your instructor to reset it.",{field:'passcode'});
     const rev=await bump(c,w);
-    if(!existingAdmin)await c.query("INSERT INTO players(world_id,name,name_key,pass_hash,is_instructor,rev) VALUES($1,'Neven','neven',$2,true,$3)",[w.id,adminHash,rev]);
-    let p=(await c.query('SELECT * FROM players WHERE world_id=$1 AND name_key=$2',[w.id,key])).rows[0];
-    if(p){if(!await matches(b.passcode,p.pass_hash))fail(401,'passcode','That name already exists. The passcode does not match. If you are new, pick a different name.');p=(await c.query('UPDATE players SET last_seen_at=now(),rev=$2 WHERE id=$1 RETURNING *',[p.id,rev])).rows[0];}
-    else p=(await c.query('INSERT INTO players(world_id,name,name_key,pass_hash,rev) VALUES($1,$2,$3,$4,$5) RETURNING *',[w.id,name,key,newHash,rev])).rows[0];
+    if(p)p=(await c.query('UPDATE players SET last_seen_at=now(),rev=$2 WHERE id=$1 RETURNING *',[p.id,rev])).rows[0];
+    else p=(await c.query('INSERT INTO players(world_id,name,name_key,pass_hash,is_instructor,rev) VALUES($1,$2,$3,$4,$5,$6) RETURNING *',[w.id,name,key,key==='neven'?adminHash:newHash,key==='neven',rev])).rows[0];
     return {token:token(p),player:publicPlayer(p)};
    }));
   }
@@ -117,7 +119,7 @@ export default async function handler(req){
      if(!offered.length)fail(409,'empty','Add a card or link before committing.');
      if(offered.some(a=>!a.to_card_id))fail(409,'blank','Write every cell before committing. To keep one Fork card, Change to Destiny.');
      const written=(await c.query('SELECT * FROM cards WHERE session_id=$1 AND draft AND NOT deleted ORDER BY seq',[session.id])).rows;
-     for(const a of written){text(a.body,600,'Fragment');text((await path(c,w,a.parent_path_id)).label,60,'Card name');}
+     for(const a of written){text(a.body,600,'Narrative Fragment');text((await path(c,w,a.parent_path_id)).label,60,'Choice');}
      for(const a of offered){await card(c,w,a.from_card_id);if(links.includes(a.kind))await linkTarget(c,w,p,await card(c,w,a.from_card_id),a.kind,a.to_card_id);else await card(c,w,a.to_card_id);}
      await c.query('UPDATE cards SET draft=false,rev=$2,updated_at=now() WHERE session_id=$1 AND NOT deleted',[session.id,rev]);await c.query('UPDATE paths SET draft=false,rev=$2,taken_at=COALESCE(taken_at,now()) WHERE session_id=$1 AND NOT deleted',[session.id,rev]);
      await c.query("UPDATE edit_sessions SET status='committed',rev=$2,updated_at=now() WHERE id=$1",[session.id,rev]);
@@ -136,7 +138,7 @@ export default async function handler(req){
     const a=await path(c,w,b.path_id),session=await activeSession(c,w,p);if(a.created_by!==p.id)fail(403,'forbidden','Only the dealer can write this cell.');
     if(!a.draft||!session||session.id!==a.session_id)fail(409,'session','Write inside your open session.');
     if(a.to_card_id)fail(409,'taken','This cell is already written.',{card_id:a.to_card_id});if(!kinds.includes(a.kind))fail(400,'path','Choose a cell.');
-    const label=text(b.label,60,'Card name'),body=text(b.body,600,'Fragment'),m=media(b),parent=await card(c,w,a.from_card_id);
+    const label=text(b.label,60,'Choice'),body=text(b.body,600,'Narrative Fragment'),m=media(b),parent=await card(c,w,a.from_card_id);
     const made=(await c.query("INSERT INTO cards(world_id,type,author_id,body,media_kind,media_url,parent_path_id,depth,rev,draft,session_id) VALUES($1,'open',$2,$3,$4,$5,$6,$7,$8,true,$9) RETURNING *",[w.id,p.id,body,m.kind,m.url,a.id,parent.depth+1,rev,session.id])).rows[0];
     await c.query('UPDATE paths SET label=$2,to_card_id=$3,rev=$4 WHERE id=$1',[a.id,label,made.id,rev]);return {card:made,rev:Number(rev)};
    }
@@ -155,8 +157,8 @@ export default async function handler(req){
     if(route[2]==='dead-end'&&method==='POST')fail(410,'retired','A card with nowhere to go is already a dead end.');
     own(a,p);
     if(route.length===2&&method==='PATCH'){
-     const body=(a.draft?optionalText:text)(b.body??a.body,600,'Fragment'),m=media({media_kind:b.media_kind===undefined?a.media_kind:b.media_kind,media_url:b.media_url===undefined?a.media_url:b.media_url});
-     if(b.label!==undefined)await c.query('UPDATE paths SET label=$2,rev=$3 WHERE id=$1',[a.parent_path_id,(a.draft?optionalText:text)(b.label,60,'Card name'),rev]);
+     const body=(a.draft?optionalText:text)(b.body??a.body,600,'Narrative Fragment'),m=media({media_kind:b.media_kind===undefined?a.media_kind:b.media_kind,media_url:b.media_url===undefined?a.media_url:b.media_url});
+     if(b.label!==undefined)await c.query('UPDATE paths SET label=$2,rev=$3 WHERE id=$1',[a.parent_path_id,(a.draft?optionalText:text)(b.label,60,'Choice'),rev]);
      return {card:(await c.query('UPDATE cards SET body=$2,media_kind=$3,media_url=$4,rev=$5,updated_at=now() WHERE id=$1 RETURNING *',[a.id,body,m.kind,m.url,rev])).rows[0]};
     }
     if(route.length===2&&method==='DELETE'){
@@ -168,7 +170,7 @@ export default async function handler(req){
     const a=await path(c,w,route[1]);if(a.created_by!==p.id)fail(403,'forbidden','Only the dealer can change this blank card.');
     if(a.draft)fail(409,'session','Change the transition or discard the session.');
     if(a.to_card_id&&!links.includes(a.kind))fail(409,'written','A written path cannot be changed.');
-    if(method==='PATCH')await c.query('UPDATE paths SET label=$2,rev=$3 WHERE id=$1',[a.id,(a.draft?optionalText:text)(b.label,60,'Card name'),rev]);
+    if(method==='PATCH')await c.query('UPDATE paths SET label=$2,rev=$3 WHERE id=$1',[a.id,(a.draft?optionalText:text)(b.label,60,'Choice'),rev]);
     else await c.query('UPDATE paths SET deleted=true,rev=$2 WHERE id=$1',[a.id,rev]);return {ok:true};
    }
    if(route[0]==='settings'&&method==='PATCH'){instructor(p);for(const key of ['jootsy_min_cards'])if(b[key]!==undefined&&(!Number.isInteger(b[key])||b[key]<1||b[key]>100))fail(400,'settings','The card threshold must be a whole number from 1 to 100.');if(b.jootsy_enabled!==undefined&&typeof b.jootsy_enabled!=='boolean')fail(400,'settings','Choose on or off.');await c.query('UPDATE worlds SET jootsy_ring=$2,jootsy_min_cards=$3,end_ring=$4,jootsy_enabled=$5 WHERE id=$1',[w.id,w.jootsy_ring,b.jootsy_min_cards??w.jootsy_min_cards,w.end_ring,b.jootsy_enabled??w.jootsy_enabled]);return {ok:true};}
