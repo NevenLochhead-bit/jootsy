@@ -1,10 +1,10 @@
 # Current focus
 
-- **17.A + 17.B are deployed together and verified**, runtime `f2e317e6a1b8bc1445cdbf2b2ba6d07331dc514f` / PR #7, 10:01 ET. Deploy **5 of 8**. Three publications remain; final by 11:45 ET, nothing after noon.
-- Browser acceptance: returning typo and taken-name refusals, name spacing/case, keyboard Enter and assertive error regions, Show passcode, signed-in identity, one-card green Commit, live Choices, Destiny-first order, no stage-three outgoing controls, empty Board centre, instructor-only Add Scenario and remembered Players collapse pass. Safari returned as the same player and recovered the saved open session and card text. Actual VoiceOver speech was not tested.
-- **Next actor: Engineer**, building 17.C image + sound, then 17.D wires + scan. Safari playback is a release gate for sound; if it is not solid by 11:30, ship without Add sound.
-- Decisions: Name still labels the player identity and scenario name, as explicitly required by B/the scenario form; card fields are Choice and Narrative Fragment. Cards now shows the unfinished-session banner and Resume alongside committed cards. Stage-three incoming Change remains; outgoing transition controls are removed.
-- Neven's Commit sound approval is recorded. Physical-phone touch/pinch/performance remains his hardware check. Existing Postgres/Blobs and private instructor environment are unchanged. F11/F12 remain after-class items.
+- **17.A+B and 17.C sound are live.** A+B runtime `f2e317e` / PR #7 at 10:01 ET; sound runtime `bd1cf1e` / PR #8 at 10:24 ET. Six of the original eight production publications used. Latest Designer notice permits three remaining; the plan uses one for C2 video and one for D. Final by 11:45 ET, none after noon.
+- **Sound ships.** Live MP3 and M4A upload and playback passed in Chrome and native Safari before 11:30. Commit/reload retains both. WAV and 3 MB audio return the exact refusal. Transaction tests verify another player's state, hidden masking, byte-Range 206/416/HEAD and concurrent upload quota. Second-player visual reader check is still being completed; no claim of actual VoiceOver speech or physical-phone testing.
+- **Next actor: Engineer**, implementing C2 from Architect `ea2905b` using its required nullable `video_url`, then D wires/Refresh scan. Video must pass both browsers by 11:30 or be omitted. Architect can review sound in Sandbox now.
+- A+B browser checks pass: wording/order, green one-card Commit, no stage-three outgoing controls, live Choices, new/returning refusals and normalization, keyboard Enter/assertive error regions, Show passcode, signed identity, Add Scenario and remembered Players collapse. Safari recovers the saved open session.
+- Decisions: player/scenario Name remains; card fields use Choice/Narrative Fragment. Stage-three incoming Change remains. Cards lists committed cards with an unfinished-session Resume banner. Media uses the same site-wide `jootsy-images` Blobs store and registered SQL upload ledger; limits are decimal MB. New migrations only. F11/F12 remain after class. No blocking Designer decision.
 
 Authoritative Architect notes and the Current focus for the project are on branch `architect`: [ARCHITECT-NOTES.md](https://github.com/NevenLochhead-bit/jootsy/blob/architect/ARCHITECT-NOTES.md). This file records engineering handoffs only.
 
@@ -28,3 +28,10 @@ Authoritative Architect notes and the Current focus for the project are on branc
 - Ready for Architect review in https://jootsy.netlify.app/sandbox . Class URL remains https://jootsy.netlify.app/mdst1050 . Reload before testing.
 - Next: Engineer builds C then D without waiting. No Designer decision is blocking.
 - Notice: **Engineer pushed: v4.1 A+B are live at f2e317e; ENGINEER-HANDOFF.md is ready; Architect can review while Engineer builds C.**
+
+## v4.1 C sound handoff
+
+- Runtime `bd1cf1e` / PR #8; published 10:24 ET. Migration `20261110151000_card_audio` applied. Postgres transactions plus Netlify Blobs; Pro team. Class https://jootsy.netlify.app/mdst1050 ; review https://jootsy.netlify.app/sandbox . Instructor environment/passcode remains unchanged (private chat only).
+- Ready for Architect: Add image + Add sound, 1600 px JPEG preparation/1.5 MB cap, actual-content MP3/M4A validation/2 MB cap, 60 uploads per player/world reserved atomically, correct MIME/immutable caching/Range, independent sound and image, native click-to-play with no autoplay, card edit/Commit/reload persistence.
+- Next actor: Engineer for C2 then D; Architect reviews C in parallel. No Designer item blocking.
+- Notice for Bolus: **Engineer pushed: sound is live at bd1cf1e and plays in Chrome and Safari; ENGINEER-HANDOFF.md is ready; Architect reviews sound while Engineer builds C2 video, then D.**
