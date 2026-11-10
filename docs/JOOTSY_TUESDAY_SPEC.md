@@ -1,8 +1,8 @@
-# Jootsy! — Tuesday Spec (for Codex) — v2.4
+# Jootsy! — Tuesday Spec (for Codex) — v3
 
-> **v2.4 (Tue Nov 10, 01:40 ET): read §15 first.** It changes how a card is played ("write, then cut") and overrides §5 R5, §6 `POST /plays`, and §7.2 wherever they differ. Everything else in v2 stands.
+> **v3 (Tue Nov 10, 00:40 ET): read §15 first.** It changes the model: every card is the same, any player cuts from any written card, and a cut deals blank cards only its author writes. §15 overrides §3–§8 wherever they differ.
 
-*From the architect. **Replaces v1 entirely**; if you started on v1, the model changed (types now live on cards, every move plays a card, paths can be claimed). Self-contained: you do not need the brief to build this. Deadline: deployed and tested before **Tuesday Nov 10, 2026, 10:00 am ET**. Class is at 12:30 pm with 33 first-year students, many on phones.*
+*From the architect. Sections 1–14 are v2, as built and deployed at `2c16471`; **§15 (v3) is the change to build now.** Self-contained: you do not need the brief to build this. Deadline: deployed and tested before **Tuesday Nov 10, 2026, 10:00 am ET**. Class is at 12:30 pm with 33 first-year students, many on phones.*
 
 Build in the three slices in §11, deploy after each, and report as in §14. If something here is ambiguous, choose the simpler reading, note it, and keep going. Do not stop to ask.
 
@@ -264,117 +264,124 @@ Thursday's Jootsy! card, so the model can take it without migration: a card of t
 
 After each slice: the deployed URL, the instructor passcode, the database and storage you used and anything Neven must click to keep them, which checklist items pass, and anything you decided where this spec was silent.
 
-## 15. Change v2.4 — write, then cut
+## 15. Change v3 — every card the same; the cut is the move
 
-Designer decisions (Neven, Nov 10): *"we aren't playing specific cards but have these options for how to put them in relation."* And: *"the student really just needs to focus on naming their cards, adding an image or video, and a description of some type of narrative fragment."*
+**This section replaces all earlier versions of §15 (v2.2–v2.4) and overrides §3–§8 wherever they differ.** It is a model change, not a reskin. Where §15 is silent, v2 stands.
 
-Every card is the same when it is written. Fork, Destiny, Dream, Wormhole and Dead End are **cuts**: the author's one-click choice of how their card hands off to what comes next. A cut deals blank face-down cards. Whoever writes a card names it.
+Designer decisions (Neven, Nov 10):
+- *"Every card is essentially the same, but you determine how it branches… it's all about negotiating the cut from one to the next."*
+- *"We aren't playing specific cards but have these options for how to put them in relation."*
+- *"A fork deals two blank cards, destiny deals one blank card, dream deals one blank card. The forker names the card. They author that transition. You can't write in someone else's transition, but you can subsequently fork from it."*
+- *"The student really just needs to focus on naming their cards, adding an image or video, and a description."*
+- *"We don't need the perimeter… my task for students is to play at least five cards."*
 
-Do F1 and F2 from `ARCHITECT-NOTES.md` (branch `architect`) **first**, deploy and verify them, then this.
+**The game in four sentences.** Any player can cut from any written card, their own or anyone else's: Fork, Destiny or Dream. A cut deals blank cards that belong to the player who cut. Only that player writes them: a name, a fragment, optional media. Everyone can then cut from what they wrote.
 
-*(v2.3 replaces v2.2 of this section. Differences: a cut no longer asks for path names; the writer names the card; the words on connections show on hover or tap only.)*
+Do F1 and F7 from `ARCHITECT-NOTES.md` (branch `architect`) **first**.
 
 ### 15.1 Data
 
-- `cards.type` gains the value `open`: a written card that has not been cut. Replace the CHECK constraint in a new migration.
-- `paths.label` may be empty (`''`) while the path is unwritten. Relax its CHECK to 0–60 characters. A written path always has a label of 1–60.
+- `cards.type`: new cards are `open`. `dead_end` marks a dead end. `scenario` as before. Older values stay legal for existing rows.
+- `paths` gains `kind` (`fork`, `destiny`, `dream`, `wormhole`; Thursday adds `jootsy`) and `cut_id` (shared by the two paths of one Fork). `paths.created_by` is the **dealer**: the owner of that blank card.
+- `paths.label` may be `''` while unwritten; a written path's label is 1–60 characters and is the card's name.
+- `cards.image_prompt` (nullable, up to 300 characters) — only if §15.7 is built.
+- Claim columns stay in the table, unused.
 
-### 15.2 Rules (replace R5; add R16–R19)
+### 15.2 Rules (these replace R4–R11; R1–R3 and R12–R15 stand)
 
-- **R5′.** A card is played with a **name** (1–60 characters), a fragment (1–600) and optional media. The name becomes the label of the path it is played on, replacing anything pencilled there. The card lands with `type='open'`: no paths, no door. R4, R6 and R7 are otherwise unchanged (a scenario's new path and its card are still one transaction).
-- **R16. Cut.** Only the author may cut their own `open` card, once, choosing:
-  - `fork`: deals 2 blank paths (`count` 2–4, default 2);
-  - `destiny`: deals exactly 1;
-  - `dream`: deals 1 (`count` 1–4, default 1);
-  - `wormhole`: a target that is another existing, non-deleted card by the same author (never the card itself), and an optional door label (default: the target's title);
-  - `dead_end`: nothing.
-  One transaction sets the type and creates the paths with empty labels. Cutting a card that is not `open` returns `409`.
-- **R17. Uncut.** The author may undo their cut while none of the card's paths is written or claimed by someone else. It tombstones those paths, clears any door, and returns the card to `open`.
-- **R18.** Nobody but the author can do anything to an `open` card. It offers no paths, so play continues from it only after its author cuts it.
-- **R19. Pencilling.** The author of a card may write, change or clear a name on any of its unwritten paths (the existing `PATCH /paths/:id`, now accepting an empty label). It is an invitation only; the writer's name replaces it.
+- **C1. Cut.** Any player may cut from any written card that is not a dead end, including scenarios and other players' cards. `fork` deals **2** blank paths, `destiny` **1**, `dream` **1**. The paths carry the kind and belong to the cutter. A card may be cut any number of times, by any number of players.
+- **C2. Write.** Only the dealer may write on their blank path: a name (1–60), a fragment (1–600), optional media. The card lands with depth = parent + 1; its name is the path's label. Anyone else gets `403`.
+- **C3. Wormhole.** A player may cut a wormhole from one of **their own** cards to another of their own cards (never the same card). It is one path of kind `wormhole` with `to_card_id` set, an optional label (default: the target's name), no new card, and no effect on depth or layout.
+- **C4. Dead End.** A card's author may mark it a dead end only while no live path leaves it. Nobody can cut from a dead end. The author can undo it.
+- **C5. Discard.** A dealer may discard any of their own blank paths, or any of their own wormholes, at any time.
+- **C6. Cap.** A player may hold at most **8** blank cards in a world. A cut that would exceed it returns `409`: "Write or discard one of your blank cards first."
+- **C7. Ownership.** Only a card's author may edit its name, fragment or media. Nobody may write, rename or discard another player's blank card.
+- **C8. Delete.** An author may delete their own card only while no tree path leaves it (written or blank, anyone's). Their own wormholes from or to it are tombstoned with it. The path it sat on becomes blank again and is still theirs.
+- **C9. Scenarios** have no author; only the instructor creates, edits or deletes them (delete only while no path leaves them). Starting paths on scenarios are dropped. Everyone cuts from a scenario exactly as from any card.
+- **C10.** A card's colour is the kind of the cut that leads into it. Scenarios are white.
+- **C11.** There are no claims. Remove the claim calls and the "is writing…" state.
 
-R9 (dealing one more blank path from your own Fork or Dream, to 6) and R10 (delete) are unchanged; an `open` card has no paths, so its author can delete it.
-
-### 15.3 API
+### 15.3 API (replaces the `plays`, `claim`, `cards/:id/paths` and path routes of §6)
 
 | Method and path | Body | Does |
 |---|---|---|
-| `POST /plays` | `{path_id}` or `{new_path:{from_card_id}}`, plus `{label, body, media_kind?, media_url?}` | Plays an `open` card and sets the path's label (R5′). `type`, `paths` and `door` are no longer accepted from the client. |
-| `POST /cards/:id/cut` | `{type, count?, door?:{label?, to_card_id}}` | R16. |
-| `DELETE /cards/:id/cut` | | R17. |
-| `POST /cards/:id/paths` | `{}` | R9: deals one more blank path. |
-| `PATCH /paths/:id` | `{label}` (0–60) | R19. |
+| `POST /cards/:id/cuts` | `{kind:"fork"\|"destiny"\|"dream"}` | C1, C6. Returns the new blank paths. |
+| `POST /cards/:id/cuts` | `{kind:"wormhole", to_card_id, label?}` | C3. |
+| `POST /plays` | `{path_id, label, body, media_kind?, media_url?, image_prompt?}` | C2. |
+| `DELETE /paths/:id` | | C5. |
+| `POST /cards/:id/dead-end` | `{value:bool}` | C4. |
+| `PATCH /cards/:id` | `{label?, body?, media_kind?, media_url?, image_prompt?}` | C7. `label` renames the card (its incoming path). |
+| `DELETE /cards/:id` | | C8. |
 
-### 15.4 Card view (replaces the hand and the type choice in §7.2)
+`join`, `state`, `uploads`, `hide`, `scenarios`, `settings`, `reset-passcode` are unchanged, except that `scenarios` ignores `paths`.
 
-- **The hand is removed** from the bottom of the Card view, and the type switcher from the composer.
-- **Composer:** three things, in this order, and nothing else: **Name your card** (prefilled with a pencilled name if there is one), the fragment, **Add image** / **Paste a link**. Then **Play card**. Tapping a face-down card goes straight to it.
-- **After Play card** the player lands on their new card with **"How does it cut?"** directly under it: 🔀 Fork · 🔮 Destiny · ✨ Dream · ⚫ Wormhole · 🛑 Dead End, and 🎆 Jootsy! locked with the same progress line as before. Each is **one click**:
-  - Fork → two blank face-down cards appear under the card, immediately.
-  - Destiny → one. Dream → one.
-  - Wormhole → the searchable list of the player's own other cards; picking one makes the door.
-  - Dead End → confirms in place.
-- On your own Fork or Dream, a ghost **＋ card** deals one more (R9).
-- The loop is now: **write, cut, write.**
-- A blank face-down card reads **"unwritten"** on its band, or its pencilled name. On your own card, tapping the band's pencil lets you name it (R19); this is never required.
-- Your own cut card whose paths are all unwritten shows a quiet **Change the cut** (R17).
-- Someone else's `open` card shows one line in place of paths: *"{name} hasn't cut this card yet."*
-- **Look:** an `open` card has a white frame; it takes its cut's colour when cut. On the Map an `open` card is white, and the viewer's own pulse gently.
-- **Me drawer:** add **"Not yet cut"**, the player's own `open` cards, each with **Open**.
-- Player-facing copy says "cut", never "type" or "hand". (The word is Neven's to change.)
+**Events:** `card_played` (own); `card_cut` with target = the card's author, written when a different player cuts from their card.
 
-### 15.4a The trace on every connection
+### 15.4 Card view (replaces §7.2)
 
-Designer (Neven, Nov 10): *"the arrows have a trace of what the transition is… so we understand the movement"*, and *"maybe those words are only hover-over visible, and each transition is colour coded."*
+- **Top bar:** back, **Map**, **Me**. No ring number.
+- **Came from:** "← *{parent name}*" in the colour of the cut that brought you here, with its icon; the word on hover or tap.
+- **The card:** portrait, frame in the colour of its incoming cut (C10); name; media; fragment; "by {name}". Tapping the author's name opens the Map with that player lit.
+- **What leaves it,** as a row of small cards under it:
+  - a written card → face-up tile: its name, its author, its cut's colour and icon. Tap to walk there.
+  - **your** blank card → face-down with your card back and **Write**. A small × discards it.
+  - **someone else's** blank card → face-down with their back, dimmed, "{name}'s", not tappable.
+  - a wormhole → a black tile, "→ *{target name}*". Tap to go.
+- **"How does it cut?"** directly under that row, on every written card, for every player: **🔀 Fork · 🔮 Destiny · ✨ Dream**. On your own cards also **⚫ Wormhole** and **🛑 Dead End**. Last, **🎆 Jootsy!** locked: "{n} of 5 cards played. Jootsy! opens on Thursday."
+  - Each is **one click.** Fork: two of your blank cards appear in the row. Destiny, Dream: one. Wormhole: a searchable list of your own other cards. Dead End: confirms in place.
+- **Composer** (tap one of your blank cards): **Name your card**, the fragment (placeholder *"I see… I hear… I walk toward…"*, count to 600), **Add image · Paste a link**, then **Play card**. Nothing else.
+- **After Play card** you land on your new card with "How does it cut?" under it. The loop: **cut, write, cut.**
+- **Dead end:** "🛑 Dead end." and **Back to the last fork**; no cut row for anyone; its author sees **Undo**.
+- **A scenario with nothing cut from it yet** says one sentence: "Cut from here to begin. Fork gives you two cards to write."
+- Player-facing copy says "cut". (The word is Neven's to change.)
 
-- **Colour is the trace.** Every connection is an arrow pointing the way the story moves, in its cut's colour (already §8.6). Wormhole chords get an arrowhead at the target.
-- **The word appears only on hover (desktop) or tap (touch):** a small label on the arrow, "Fork", "Dream", "Wormhole". No permanent text on connections at any zoom. The legend stays.
-- **Card view.** The "came from" line and each path tile carry their cut's colour and icon; the word shows on hover or tap.
-- A path's cut is the type of the card it leaves, so no new data is needed.
+### 15.5 Map (changes to §7.3 and §8)
 
-### 15.4b "Describe an image" — last, and only if A1–A8 already pass
+- **No rings of any kind:** no perimeters, no hairlines, no ring labels, none in the legend. The layout is unchanged: radial, scenarios at the centre, radius strictly from depth.
+- **Connections** are arrows pointing the way the story moves, in their cut's colour. The word ("Fork", "Dream", "Wormhole") appears only on hover (desktop) or tap (touch). No permanent text on connections.
+- **Cards** are small portrait rectangles in the colour of their incoming cut. Blank cards are outlined, tinted with their dealer's back. Only your own blank cards are tappable (**Write**).
+- **Players panel** (for everyone): every player's name with their count of cards played, most first. Tap a name: their cards light up, everyone else's dim to 35%. Tap again to clear. **Mine** stays as the shortcut.
+- Fit, Find me, the previews and Map ↔ Card navigation stay.
 
-Designer (Neven, Nov 10): *"we could also have a 'describe image' option and AI could make it for us when we later string it together."* On Tuesday this **stores a description only**. No image generation, no AI call, no key.
+### 15.6 Me, instructor, settings
 
-- New nullable column `cards.image_prompt` (text, up to 300 characters). Accepted by `POST /plays` and `PATCH /cards/:id`; returned in `/state`.
-- Composer: the media row becomes **Add image · Paste a link · Describe an image**. The third opens one line: *"Describe the image this card should have."* A card has either media or a description, not both.
-- Card view: where the image would be, a framed placeholder with the description in italics and the caption "image to come". Nothing on the Map.
-- If this is not built by the cutoff, leave it out entirely; nothing else depends on it.
+- **Me:** "{n} of 5 cards played" with a bar; **My blank cards** (each with **Write** and **Discard**); **News**: "{name} forked from your card *{name}*" (likewise "dreamed from", "drew a destiny from"), linking to that card; Log out. Play does not stop at five.
+- **Instructor players table:** name, cards played (marking those at five or more), last active; a row opens the Map with that player lit.
+- **Settings:** `jootsy_min_cards` (default **5**; set it to 5 in every world) and `jootsy_enabled` only.
 
-### 15.4c No perimeters
+### 15.7 "Describe an image" — last, and only if everything in §15.9 already passes
 
-Designer (Neven, Nov 10): *"I also don't think we need the perimeter rings. My task for students is to play at least five cards, that's it."* This overrides §7 and §8 wherever they mention rings or perimeters.
+Stores a description; generates nothing. The composer's media row gains **Describe an image**: one line, *"Describe the image this card should have."* A card has media or a description, not both. In the Card view the description sits where the image would be, in italics, captioned "image to come". If time is short, leave it out entirely.
 
-- **Map:** draw no rings at all: no Jootsy! Perimeter, no End of Game ring, no depth hairlines, no ring labels; remove them from the legend. The layout itself is unchanged: radial, scenarios at the centre, radius strictly from depth (§8.1–8.4).
-- **Card view:** remove "Ring {n}" from the top bar.
-- **The task is five cards.** `jootsy_min_cards` defaults to 5 (migration: set it to 5 in every world). Wherever progress was shown toward the perimeter, show **"{n} of 5 cards played"** instead: in the Me drawer (with the bar), and on the locked 🎆 Jootsy! button, which on Tuesday reads "{n} of 5 cards played. Jootsy! opens on Thursday."
-- **Settings:** show only `jootsy_min_cards` and `jootsy_enabled`. Leave `jootsy_ring` and `end_ring` in the table, unused.
-- **Instructor players table:** drop "furthest ring"; keep cards played, and mark players who have reached `jootsy_min_cards`.
-- Acceptance item 13 becomes: every card's distance from the centre on the Map equals its depth; no two nodes overlap in the `stress` world; **no ring or perimeter is drawn anywhere.**
+### 15.8 Existing data
 
-### 15.4d Players on the Map
+One migration, then nothing legacy remains:
+- every existing path: `kind` = its from-card's type if that is `fork`, `destiny` or `dream`, otherwise `fork`;
+- every existing wormhole card: add a `wormhole` path from it to its target, owned by its author, labelled with its door label;
+- every non-scenario card: `type` = `dead_end` if it was a dead end, otherwise `open`;
+- unwritten paths keep their dealer as owner; clear all claims; set `jootsy_min_cards` = 5.
 
-Designer (Neven, Nov 10): *"play can continue — and somewhere we can see what cards people have played; you can click the name of the user and see their cards light up on the overall deck."* This sharpens the player picker already in §7.3; it is for every player, not only the instructor.
+Regenerate or keep the `stress` world as you prefer, as long as it has ~300 cards and still passes the layout check.
 
-- The Map's player picker becomes a **Players** panel: every player's name with their count of cards played, most cards first. Tap a name: that player's cards light up and everyone else's dim to 35%. Tap again to clear. **Mine** stays as the shortcut for yourself.
-- In the Card view, tapping the author's name under a card opens the Map with that player lit.
-- Nothing stops at five cards. The count keeps rising and play continues.
+### 15.9 Acceptance (replaces §12 items 1–11 and 13; items 12 and 14–17 stand)
 
-### 15.5 Existing data
+1. On a 360 px phone a new player opens a scenario, taps Fork, sees two blank cards, writes one (name, fragment), plays it, lands on it, and taps Fork again. Under 60 seconds, no instruction.
+2. Player B opens player A's written card and taps Dream: one blank card of B's appears. A's news says B dreamed from it.
+3. Player A cannot write on, rename or discard B's blank card (403; no control in the UI).
+4. A second browser sees new cards and blank cards within 5 seconds.
+5. Ten players fork from the same scenario at once: twenty blank cards, no errors.
+6. The ninth blank card is refused with the C6 message; after one discard the cut succeeds.
+7. Wormhole: offered only on your own cards; the picker lists only your own other cards; the API rejects any other target.
+8. Dead End is refused on a card that has anything leaving it; nobody can cut from a dead end; **Back to the last fork** and **Undo** work.
+9. Deleting your card turns its path blank again; a card with anything leaving it cannot be deleted.
+10. Player B cannot edit or delete A's card (403).
+11. A card's colour, on the card and on the Map, is its incoming cut's; no word shows on a connection until hover or tap; every arrow points away from the centre except wormholes.
+12. The Map draws no ring anywhere; distance from the centre equals depth; no overlap in `stress`.
+13. Players panel: tapping a name lights exactly that player's cards; counts match.
+14. Migrated older cards walk and display correctly.
 
-Cards already typed and paths already named (the `stress` world, sandbox tests) stay as they are and behave as before. No conversion.
+### 15.10 Cutoff, rollback, deploy budget
 
-### 15.6 Acceptance (in addition to re-running 2–17)
-
-- **A1.** On a 360 px phone, a new player: scenario → **Start here** → names the card, writes, **Play card** → lands on an open card → taps Fork → two blank face-down cards appear with no further input. Under 60 seconds, no instruction.
-- **A2.** Another player sees no cut controls on that open card, and `POST /cards/:id/cut` returns 403 for them.
-- **A3.** Cutting an already-cut card returns 409.
-- **A4.** Uncut works while all paths are unwritten; it is refused once another player has written or is writing on one.
-- **A5.** A wormhole cut rejects the card itself and any card by another player as its target.
-- **A6.** A previously typed card in `stress` renders and walks exactly as before.
-- **A7.** No connection shows a word until it is hovered or tapped; every connection is in its cut's colour and points the right way.
-- **A8.** Playing on a blank path without a name is refused with a clear message; a pencilled name is prefilled and can be replaced.
-
-### 15.7 Cutoff and rollback
-
-Known-good release: `main` at `2c16471`. This change must be deployed and re-verified by **09:00 ET Tuesday**. If it is not, say so in your report, redeploy `2c16471` plus F1/F2, and run `UPDATE cards SET type='dead_end' WHERE type='open'` and `UPDATE paths SET label='unwritten' WHERE label=''` so the older client never meets an open card or an empty label. Do not put QA writing in the `mdst1050` world.
+- **Before migrating, take a database snapshot or branch** and write down, in your report, the exact step that restores it. `mdst1050` holds no student cards before class, so a restore loses nothing.
+- Known-good release: `main` at `2c16471`. v3 must be deployed and re-verified by **09:00 ET Tuesday**. If it is not, restore the snapshot, redeploy `2c16471`, and say so in the first line of your report.
+- **Deploy budget: v3 reaches production in at most 3 deploys** (see F7). Build and test off `main`. Do not put QA writing in `mdst1050`.

@@ -2,122 +2,106 @@
 
 ## Current focus
 
-- **State (Tue Nov 10, 01:40 ET):** Slices A + B + C are deployed (`main`, code release `2c16471`). Review 1 found no blocking defect. Neven has decided the game changes to **"write, then cut"**: cards are all the same; Fork, Destiny, Dream, Wormhole and Dead End are options for how the author puts them in relation.
-- **Next to act: Engineer.** In this order: (1) F1 and F2 below; (2) spec **v2.4**, `docs/JOOTSY_TUESDAY_SPEC.md` §15 on branch `architect`. Cutoff 09:00 ET; rollback recipe in §15.7.
-- **Then: Architect.** Review of v2.4 against §15.6.
-- **Next to act: Neven as Designer**, on items 2–4 under "Designer → Open". None blocks the Engineer.
-- **Class:** Tue Nov 10, 12:30 pm ET. `2c16471` is class-ready as it stands and is the fallback if v2.2 misses its cutoff.
+- **State (Tue Nov 10, 00:40 ET):** v2 is deployed and verified by the Engineer (`main`, code release `2c16471`). My Review 1 found no blocking defect. Since then the Designer has changed the model. **Spec v3** is issued: `docs/JOOTSY_TUESDAY_SPEC.md` §15, branch `architect`.
+- **v3 in one line:** every card is the same; any player cuts (Fork, Destiny, Dream) from any written card; a cut deals blank cards that only the cutter writes; no perimeters; the task is five cards.
+- **Next to act: Engineer.** (1) F1 and F7 below. (2) Spec v3, §15. Cutoff 09:00 ET; snapshot and rollback in §15.10; at most 3 production deploys.
+- **Then: Architect.** Review of v3 against §15.9.
+- **Neven as Designer:** nothing blocking. Three calls of mine are flagged for him under "Designer → For him to veto".
+- **The Tuesday spec is frozen at v3.** New ideas go to "Thursday list" unless they fix a defect.
+- **Class:** Tue Nov 10, 12:30 pm ET. `2c16471` is class-ready and is the fallback if v3 misses its cutoff.
 
 ## Where things are
 
 | What | Where |
 |---|---|
-| The spec the Engineer builds from (v2) | `docs/JOOTSY_TUESDAY_SPEC.md` on branch `architect` |
-| Build plan for Neven (v2) | `docs/JOOTSY_BUILD_PLAN.md` on branch `architect` |
+| The spec (v3) | `docs/JOOTSY_TUESDAY_SPEC.md` on branch `architect` |
+| Build plan for Neven (v2; out of date since v3) | `docs/JOOTSY_BUILD_PLAN.md` on branch `architect` |
 | These notes | `ARCHITECT-NOTES.md` on branch `architect` |
+| Engineer's reports | `FINAL-REPORT.md`, `ENGINEER-REPORT.md`, `SLICE-B-REPORT.md` on `main` |
 
-I write only to the `architect` branch, so my notes never trigger a Netlify deploy or collide with Engineer pushes on `main`. Read with:
+I write only to the `architect` branch. Read with:
 
 ```
 git fetch origin architect && git show origin/architect:ARCHITECT-NOTES.md
 ```
 
-If a spec change is needed I edit `docs/JOOTSY_TUESDAY_SPEC.md` here, bump its version line, and list the change in the log below. The Engineer never has to diff the spec to find out what changed.
-
-**This repo is public.** No passcodes, database URLs or keys in any commit, note or report. The instructor passcode goes to Neven outside the repo; he passes it to me.
+**This repo is public.** No passcodes, database URLs or keys in any commit, note or report.
 
 ## Designer (Neven)
 
-Decided:
+Decided (newest last; a later row overrides an earlier one):
 
 | Date | Decision |
 |---|---|
-| Nov 9 | Anyone may play on any unwritten path: "a truly open networked structure." |
+| Nov 9 | "A truly open networked structure." |
 | Nov 9 | The game must keep the sense of playing cards. |
-| Nov 9 | A Jootsy! card means jumping into another's timeline; the design must hold that distinction. Integrated as: only a Jootsy! lets you into a face-up card someone else wrote (spec §13). |
-| Nov 9 | Scenarios are created by Neven only. He creates new ones himself. |
+| Nov 9 | A Jootsy! card means jumping into another's timeline; the design must hold that distinction. |
+| Nov 9 | Scenarios are created by Neven only. |
 | Nov 9 | Deploy path is GitHub → Netlify. |
-| Nov 9 | **Thresholds confirmed.** Asked by Bolus: "Jootsy unlocks at ring 7 after seven cards have been played, and the game ends at ring 11. Are you happy with that default?" Answer: "yes." In the spec: `jootsy_ring=7`, `jootsy_min_cards=7`, `end_ring=11`. Still adjustable in settings. |
-| Nov 9 | **End of Game Perimeter is an open boundary.** Asked by Bolus whether he intended a hard stop at ring 11 or whether play should remain possible beyond it. Answer: "still allows play." The perimeter at ring 11 is drawn and labelled, and cards may be played beyond it. This matches the spec (§8.5); no change. |
-| Nov 10 | **Write, then cut.** "Every card is essentially the same, but you determine how it branches… it's all about negotiating the cut from one to the next." And: "to me it is cleaner and I think we should change it. so we aren't playing specific cards but have these options for how to put them in relation." Issued as spec v2.2 (§15) for Tuesday. The hand of typed cards is removed; face-down cards and card backs stay. |
-| Nov 10 | **The trace.** "The arrows have a trace of what the transition is, I can see a little arrow with the word wormhole on it for instance, so we understand the movement." Added to v2.2 as §15.4a. |
-| Nov 10 | **Words on hover only; colour is the code.** "Maybe those words are only hover-over visible, and each transition is colour coded depending on what type it is." §15.4a revised in v2.3. |
-| Nov 10 | **The student's job is three things.** "The student really just needs to focus on naming their cards, adding an image or video, and a description of some type of narrative fragment." Read by me as: a cut is one click and deals blank cards; whoever writes a card names it. Issued in v2.3. **Flagged to him as item 5 below in case I have over-read it.** |
-| Nov 10 | **No perimeters; the task is five cards.** "I also don't think we need the perimeter rings, my task for students is to play at least five cards, that's it, we don't need the perimeter." **Supersedes** the two Nov 9 rows above on thresholds and the End of Game Perimeter. Issued as §15.4c in v2.4: no rings drawn; `jootsy_min_cards` = 5. |
-| Nov 10 | **Play continues; players are visible.** "Play can continue — and somewhere we can see what cards people have played, you can click the name of the user and see their cards light up on the overall deck." Mostly already in v2 (Map player picker); sharpened as §15.4d. |
+| Nov 9 | ~~Thresholds: Jootsy! at ring 7 with 7 cards; End of Game at ring 11, an open boundary.~~ Superseded Nov 10. |
+| Nov 10 | **Every card is the same; the cut is the move.** "Every card is essentially the same, but you determine how it branches… it's all about negotiating the cut from one to the next." "We aren't playing specific cards but have these options for how to put them in relation." |
+| Nov 10 | **The trace.** Connections are colour coded by their cut; the word shows on hover only. |
+| Nov 10 | **Three things.** "The student really just needs to focus on naming their cards, adding an image or video, and a description." |
+| Nov 10 | **No perimeters; the task is five cards.** "We don't need the perimeter… play at least five cards, that's it." Play continues past five. |
+| Nov 10 | **Players are visible.** "Click the name of the user and see their cards light up on the overall deck." |
+| Nov 10 | **Who writes what.** "Whoever writes a card names it, yes. A fork deals two blank cards, destiny deals one blank card, dream deals one blank card. The forker names the card. They author that transition. You can't write in someone else's transition, but you can subsequently fork from it." **This reverses my v2 rule** (anyone may write on any unwritten path). Now: blank cards belong to whoever cut; anyone may cut from any written card. |
+| Nov 10 | **Five cards anywhere.** "They will automatically stick to their own." **Jootsy! unlocks after five.** |
+| Nov 10 | **"Describe an image"** as an option, with AI making the image later. v3 stores the description only (§15.7), built last. |
 
-Open:
+For him to veto (my calls inside his rules; they stand unless he objects):
 
-2. **Netlify plan.** Which plan is the `jootsy` site on, and what does its function usage allowance look like? See F2. Only he can see the account.
-3. **Cuts on the card's edges.** Neven proposed (Nov 10, 00:12) that the cut buttons sit on all four sides of the card, any cut from any side: "I could draw a fork out of the top, or a wormhole on the side to the right." My reply: yes to cuts living on the card's edges; no to the side choosing where the next card goes, because that returns placement to the player and breaks the derived map (ring = distance). Offered instead: fixed meanings per edge (back / forward / the two lateral doors). Thursday at the earliest; nothing to build. Awaiting his answer.
-4. **The word "cut".** v2.2 uses his word from "negotiating the cut" in all player-facing copy ("How does it cut?"). His to confirm or replace.
-5. **Who names a card?** v2.3 has the writer name their own card, and a Fork deal blank cards with one click. Before, the person who forked named both paths, as on the old board ("devise the forks"). The forker can still pencil a name on a blank card as an invitation, but does not have to. Confirm, or say the forker must name the paths.
-6. **"Describe an image": who makes the images, and when?** Raised by Neven (Nov 10, 00:17). v2.3 §15.4b only stores the description and shows it as a placeholder; it is last in the build order and droppable. My default: no generation in the live game; after Thursday, an instructor-triggered batch that he reviews before any image appears on a card. Needs his answer before anything generates.
-7. **Five cards: anywhere, or in a row?** With no perimeter, a student can meet the task with five separate first cards on five scenarios and never build a thread. v2.4 counts any five. Also assumed: Jootsy! unlocks at five cards played (Thursday). Confirm both, or say otherwise.
+1. **A cap of 8 blank cards per player**, so nobody litters the map with unwritten cards (C6).
+2. **Nobody can cut from a Dead End**, and only a card's author can declare one (C4).
+3. **Wormholes start from your own cards only** (C3).
 
-## Architect decisions (mine; not for Designer unless he objects)
+Open, none needed before Tuesday:
 
-- A card's type is fixed when it is played and determines the paths it names (spec R5).
-- Soft claim while writing, 10 minutes (R6).
-- Fragments 600 characters, labels 60 (R12).
-- Card backs generated per player; a face-down card shows its dealer's back (§9).
-- Tuesday media is images and pasted links only.
-- Jootsy! mirrors the target card live; it never stores a copy (§13).
+- The word "cut" in player-facing copy. His to confirm or replace.
+- Cut buttons on the card's edges. His idea; my counter-offer is fixed meanings per edge. Thursday at the earliest.
+- "Describe an image": who generates the images, and when. Nothing generates until he says.
 
-## Review 1 — Tue Nov 10, 00:45 ET
+## Thursday list
 
-**Reviewed:** `netlify/functions/api.mjs`, the initial migration, `public/app.js` (composer, polling, rendering), `netlify.toml`, at `main` `8d7aea2`. Live site: join screen at 375 px (no horizontal overflow), and unauthenticated requests to `state` and `plays` (401), a bad token (401), an unknown world (404).
+- Jootsy!: a cut from your card into another player's written card; unlocks at five cards; the event, the notice, the live ticker.
+- Backwriting by inserting a card into your own thread.
+- Sound and video uploads.
+- Each student's branch as an export for the game review.
+- Edge buttons, if he wants them.
 
-**Not reviewed:** play as two or three students in a browser. I do not create players or type passcodes on the live site myself. Either Neven signs a test student into the sandbox in the browser pane and I walk it from there, or the Engineer's browser evidence in `FINAL-REPORT.md` stands. My container cannot reach `jootsy.netlify.app` directly.
+## Review 1 — Tue Nov 10, 00:13 ET (of v2 at `main` `8d7aea2`)
 
-**What holds, from the code:**
-- R1/R4: one live card per path is enforced by a partial unique index and by a world-row lock on every write. Concurrent plays cannot both land.
-- R2: depth is set server-side from the parent.
-- R5–R7, R9, R10: type/path counts, claims, scenario paths, path limits and delete rules match the spec.
-- R8/R11: every author-only route checks ownership server-side.
-- Delta reads run in a read-only repeatable-read snapshot, so a poll can never see half a write or skip a revision.
-- No `innerHTML` anywhere in the client; fragments are text nodes.
+**Reviewed:** `netlify/functions/api.mjs`, the initial migration, `public/app.js`, `netlify.toml`. Live site: join screen at 375 px; unauthenticated `state` and `plays` (401); bad token (401); unknown world (404).
+
+**Not reviewed:** play as students in a browser. I do not create players or type passcodes on the live site. My container cannot reach `jootsy.netlify.app`.
+
+**Holds, from the code:** one live card per path (partial unique index plus world-row lock); depth set server-side; ownership checked on every author-only route; delta reads in a read-only repeatable-read snapshot; no `innerHTML` in the client.
 
 **Findings**
 
 | # | Severity | Finding | Ask |
 |---|---|---|---|
-| F1 | Do before class | Tokens are signed with `TOKEN_SECRET`, falling back to `INSTRUCTOR_PASSCODE` (`api.mjs` line 16). If the fallback is in use, any student's token is material for guessing the instructor passcode offline. | Confirm a random `TOKEN_SECRET` (32+ bytes) is set in the Netlify environment. If it is not, set it now; everyone logs in again, so do it before students join. Reply yes/no here, never the value. |
-| F2 | Do before class | Every visible tab polls every 4 s. 33 students is about 8 function calls a second, roughly 59,000 per two-hour class, twice this week, plus play in between. Depending on the Netlify plan this may exhaust the allowance or cost money. | Make polling adaptive: 4 s for 60 s after the player's own action or any received change; otherwise 10 s; 15 s while the composer is open. Keep the pause when hidden and the immediate refresh after own writes. Report the measured calls per minute for one idle tab and one active tab. |
-| F3 | Optional | `join` hashes the passcode with scrypt while holding the world lock. 33 students joining in the same minute queue behind each other. | Hash before opening the transaction. |
-| F4 | Optional | An instructor cannot rename or remove a scenario's unwritten starting paths: the route requires authorship and scenarios have no author. | Allow instructors on scenario paths. |
-| F5 | Optional | Two students with the same first name: the second sees "That name already exists. The passcode does not match." | Add: "If you are new, pick a different name." |
-| F6 | Housekeeping | There are two files named `ARCHITECT-NOTES.md`: mine on `architect`, and one the Engineer wrote on `main`. | Engineer's status goes in `FINAL-REPORT.md` or an `ENGINEER-NOTES.md`. Remove or rename the copy on `main`. |
+| F1 | Before class | Tokens are signed with `TOKEN_SECRET`, falling back to `INSTRUCTOR_PASSCODE` (`api.mjs` line 16). On the fallback, any student's token is material for guessing the instructor passcode offline. | Confirm a random `TOKEN_SECRET` (32+ bytes) is set in Netlify. If not, set it before students join. Answer yes/no; never the value. |
+| F7 | **Before anything else** | **Deploys are the cost, not traffic.** Neven's Netlify account (Pro, credit-based) has **1,283 credits left until Nov 17, auto-recharge off.** This period: 223 production deploys cost 3,345 credits, about **15 credits each**; 285,531 web requests cost 57. `main` has 24 commits from tonight, and the source-bundle workflow adds a second commit to every push. | (a) Report how many production deploys tonight's work triggered. (b) One change = one deploy: stop the workflow's second commit from triggering its own build, and mark report-only commits so Netlify skips them (`[skip netlify]`). (c) Confirm branch deploys and deploy previews are off, so pushes to `architect` and work branches cost nothing; if they cost credits, say so. (d) v3 reaches production in at most 3 deploys. |
+| F2 | Withdrawn as a cost risk | Polling every 4 s is about 59,000 requests per class, which at the observed rate is about 12 credits. | Optional: back off to 10 s when idle. Not needed before class. |
+| F3 | Optional | `join` hashes the passcode while holding the world lock. | Hash before the transaction. |
+| F4 | Moot under v3 | Instructor could not edit a scenario's starting paths. | Starting paths are dropped (C9). |
+| F5 | Optional | Second student with the same first name sees only "The passcode does not match." | Add: "If you are new, pick a different name." |
+| F6 | Housekeeping | Two files named `ARCHITECT-NOTES.md` (mine on `architect`, the Engineer's on `main`). | Rename or remove the one on `main`. |
 
-`FINAL-REPORT.md` item 17 (pan and pinch on a real mid-range phone) is still open. Neven can close it in one minute by opening `/stress` on his own phone.
+`FINAL-REPORT.md` item 17 (pan and pinch on a real phone) is still open; Neven can close it by opening `/stress` on his phone.
 
 ## Questions for the Engineer
 
 1. F1: is `TOKEN_SECRET` set? Yes or no.
-2. Answered in `FINAL-REPORT.md`: Netlify managed Postgres and Netlify Blobs, no retention click, `main` deploys.
+2. F7 (a) and (c).
 
 ## Handoff log
 
-Newest first. Each entry: commit or file, what is ready, who acts next.
+Newest first. Each entry: commit or file, what is ready, who acts next. (Entries I logged earlier tonight carried times about an hour fast; the times below are from the commits.)
 
-- **Nov 10, 01:45 ET — Architect.** `docs/JOOTSY_TUESDAY_SPEC.md` v2.4: added §15.4d "Players on the Map" (the existing picker becomes a visible Players panel with counts; author names link to it). Small, inside the freeze because it restates an existing feature. **Next: Engineer** — F1, F2, then §15.
-
-- **Nov 10, 01:40 ET — Architect.** `docs/JOOTSY_TUESDAY_SPEC.md` → **v2.4**: added §15.4c "No perimeters" (no rings on the Map, no "Ring n", task is five cards, settings trimmed, acceptance 13 reworded). Nothing else in §15 changed since the 01:30 entry. **I am freezing the Tuesday spec here**: further Designer ideas go to Thursday unless they fix a defect. **Next: Engineer** — F1, F2, then §15 (v2.4).
-
-- **Nov 10, 01:30 ET — Architect.** `docs/JOOTSY_TUESDAY_SPEC.md` v2.3: added §15.4b "Describe an image" (store-only, optional, built last). No change to anything else in §15. **Next: Engineer**, unchanged.
-
-- **Nov 10, 01:20 ET — Architect.** `docs/JOOTSY_TUESDAY_SPEC.md` → **v2.3**: §15 rewritten in place. Changes from v2.2: cuts are one click and deal blank paths (`count`, not names); the writer names the card in `POST /plays`; `paths.label` may be empty while unwritten; optional pencilling (R19); connection words on hover or tap only (§15.4a); acceptance A1, A7, A8. **Next: Engineer** — F1, F2, then §15. If you had started on v2.2, the list in this entry is the whole difference.
-
-- **Nov 10, 01:10 ET — Architect.** `docs/JOOTSY_TUESDAY_SPEC.md` v2.2: added §15.4a "The trace on every connection" and acceptance A7. Part of the same v2.2 work; no new data. **Next: Engineer**, unchanged (F1, F2, then §15).
-
-- **Nov 10, 01:00 ET — Architect.** `docs/JOOTSY_TUESDAY_SPEC.md` → **v2.2**: new §15 "write, then cut" (one new card state `open`, two new routes, the hand removed, acceptance A1–A6, cutoff and rollback). Supersedes the v2.1 composer-reorder proposal, now deleted from these notes. **Next: Engineer** — F1, F2, then §15.
-
-- **Nov 10, 00:55 ET — Architect.** `ARCHITECT-NOTES.md`: Designer item 3 opened (cuts on the card's edges). Nothing to build. **Next: unchanged** — Engineer on F1, F2; Neven on Designer items 1–3.
-
-- **Nov 10, 00:45 ET — Architect.** `ARCHITECT-NOTES.md` § "Review 1": first review of `main` `8d7aea2` (code release `2c16471`). No blocking defect. Findings F1–F6; F1 and F2 before class. Two Designer items opened. **Next: Engineer** (F1, F2) **and Neven** (Designer items 1 and 2).
-
-- **Nov 9, 22:30 ET — Architect.** `ARCHITECT-NOTES.md`: Designer clarification recorded (relayed by Bolus): ring 11 is an open boundary, play continues beyond it. My earlier note raising the question is removed as resolved. No spec change. **Next: Engineer** (Slice A + report), unchanged.
-
-- **Nov 9, 22:25 ET — Architect.** `ARCHITECT-NOTES.md`: Designer confirmation of thresholds recorded (relayed by Bolus). No spec change; the values were already the spec's defaults. **Next: Engineer** (Slice A + report), unchanged.
-
-- **Nov 9, 22:20 ET — Architect.** Branch `architect`, first commit: `docs/JOOTSY_TUESDAY_SPEC.md` (v2, identical to the kickoff copy), `docs/JOOTSY_BUILD_PLAN.md`, these notes. Nothing to review. **Next: Engineer** (Slice A + report).
+- **Nov 10, 00:40 ET — Architect.** `docs/JOOTSY_TUESDAY_SPEC.md` → **v3**: §15 rewritten whole. It replaces v2.2–v2.4, which the Engineer had not started. Model change: cuts on paths, blank cards owned by the cutter, anyone cuts from any written card, claims removed, no perimeters, five cards, Players panel, migration (§15.8), acceptance (§15.9), snapshot/rollback/deploy budget (§15.10). Notes rewritten; new finding F7 (deploy credits); F2 withdrawn. **Next: Engineer** — F1, F7, then §15.
+- **Nov 10, 00:15–00:18 ET — Architect.** Spec v2.2 → v2.4 in five commits (`016ec63` … `7927252`), following Designer messages as they arrived. All superseded by v3.
+- **Nov 10, 00:13 ET — Architect.** `6dbe3ad`: Review 1 of v2. No blocking defect.
+- **Nov 9, 22:19 ET — Architect.** `a15f81b`: End of Game Perimeter recorded as an open boundary. Superseded Nov 10.
+- **Nov 9, 22:17 ET — Architect.** `a7665cf`: thresholds confirmed. Superseded Nov 10.
+- **Nov 9, 22:13 ET — Architect.** `4edbbfc`: first commit: v2 spec, build plan, notes.
