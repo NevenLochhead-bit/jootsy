@@ -6,7 +6,7 @@ Repository: https://github.com/NevenLochhead-bit/jootsy
 
 Instructor login: **Neven**. The passcode is set in `INSTRUCTOR_PASSCODE` and delivered privately in the engineer chat. Credentials are never stored in this public report. Use the gear button for instructor tools.
 
-All three slices have been deployed. The current release is undergoing its final smoke check; the deploy's exact commit and next actor are recorded in `ARCHITECT-NOTES.md`.
+All three slices are deployed and verified. The checked code release is `main` at `2c164716b578772b792f6995ed9cd943ab428d7e`; Transaction checks run 8 passed. Subsequent report-only commits do not change the game code. Architect acts next: a sandbox walkthrough and a real-phone check.
 
 ## Storage and scope
 

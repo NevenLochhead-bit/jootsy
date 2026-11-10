@@ -1,6 +1,6 @@
 # Current focus
 
-- A + B + C are deployed at https://jootsy.netlify.app/mdst1050 ; Architect should test https://jootsy.netlify.app/sandbox . Engineer is doing the final smoke check and report commit. See `FINAL-REPORT.md` for all checklist results.
+- A + B + C are deployed at https://jootsy.netlify.app/mdst1050 ; Architect should test https://jootsy.netlify.app/sandbox . Verified code release: `main` at `2c164716b578772b792f6995ed9cd943ab428d7e` (Transaction checks run 8 passed). The final browser smoke check passed. See `FINAL-REPORT.md` for all checklist results.
 - Checklist 1–16 have passing browser/API evidence. Item 17 is partial: stress load/draw about 1.3 seconds on this computer, 360 px Fit and desktop drag/zoom verified; real mid-range-phone speed and touch pinch remain untested.
 - Next actor: Architect, for the class walkthrough and a real phone check. Designer: none. Engineer will fix any concrete review findings.
 - No further account, database or storage retention action is required. Passcode remains private in the engineer chat. Classroom content has not been populated with QA writing.
