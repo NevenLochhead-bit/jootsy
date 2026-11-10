@@ -1,4 +1,6 @@
-# Jootsy! — Tuesday Spec (for Codex) — v2
+# Jootsy! — Tuesday Spec (for Codex) — v2.2
+
+> **v2.2 (Tue Nov 10, 01:00 ET): read §15 first.** It changes how a card is played ("write, then cut") and overrides §5 R5, §6 `POST /plays`, and §7.2 wherever they differ. Everything else in v2 stands.
 
 *From the architect. **Replaces v1 entirely**; if you started on v1, the model changed (types now live on cards, every move plays a card, paths can be claimed). Self-contained: you do not need the brief to build this. Deadline: deployed and tested before **Tuesday Nov 10, 2026, 10:00 am ET**. Class is at 12:30 pm with 33 first-year students, many on phones.*
 
@@ -261,3 +263,69 @@ Thursday's Jootsy! card, so the model can take it without migration: a card of t
 ## 14. Report back
 
 After each slice: the deployed URL, the instructor passcode, the database and storage you used and anything Neven must click to keep them, which checklist items pass, and anything you decided where this spec was silent.
+
+## 15. Change v2.2 — write, then cut
+
+Designer decision (Neven, Nov 10): *"we aren't playing specific cards but have these options for how to put them in relation."* Every card is the same when it is written. Fork, Destiny, Dream, Wormhole and Dead End are **cuts**: the author's choice of how their card hands off to what comes next.
+
+Do F1 and F2 from `ARCHITECT-NOTES.md` (branch `architect`) **first**, deploy and verify them, then this.
+
+### 15.1 Data
+
+- `cards.type` gains the value `open`: a written card that has not been cut. Replace the CHECK constraint in a new migration. No other schema change.
+
+### 15.2 Rules (replace R5; add R16–R18)
+
+- **R5′.** A card is played with its fragment and optional media only. It lands with `type='open'`: no paths, no door. R4, R6 and R7 are otherwise unchanged (a scenario's new path and its card are still one transaction).
+- **R16. Cut.** Only the author may cut their own `open` card, once, choosing:
+  - `fork`: names 2–4 paths;
+  - `destiny`: names exactly 1;
+  - `dream`: names 1–4;
+  - `wormhole`: a door label and a target that is another existing, non-deleted card by the same author (never the card itself);
+  - `dead_end`: nothing.
+  One transaction sets the type and creates the paths. Cutting a card that is not `open` returns `409`.
+- **R17. Uncut.** The author may undo their cut while none of the card's paths is written or claimed by someone else. It tombstones those paths, clears any door, and returns the card to `open`.
+- **R18.** Nobody but the author can do anything to an `open` card. It offers no paths, so play continues from it only after its author cuts it.
+
+R9 (adding a path to your own Fork or Dream) and R10 (delete) are unchanged; an `open` card has no paths, so its author can delete it.
+
+### 15.3 API
+
+| Method and path | Body | Does |
+|---|---|---|
+| `POST /plays` | `{path_id}` or `{new_path:{from_card_id,label}}`, plus `{body, media_kind?, media_url?}` | Plays an `open` card. `type`, `paths` and `door` are no longer accepted from the client. |
+| `POST /cards/:id/cut` | `{type, paths?:[label…], door?:{label,to_card_id}}` | R16. |
+| `DELETE /cards/:id/cut` | | R17. |
+
+### 15.4 Card view (replaces the hand and the type choice in §7.2)
+
+- **The hand is removed** from the bottom of the Card view, and the type switcher from the composer.
+- **Composer:** title (the path's name, or a name field for a new path), fragment, media, **Play card**. Nothing else. Tapping a face-down card goes straight to it.
+- **After Play card** the player lands on their new card with **"How does it cut?"** directly under it: 🔀 Fork · 🔮 Destiny · ✨ Dream · ⚫ Wormhole · 🛑 Dead End, and 🎆 Jootsy! locked with the same progress line as before.
+  - Fork → a small sheet: two path names, "+ path" to 4, **Deal**. The face-down cards appear under the card.
+  - Destiny → one path name. Dream → one, "+ path" to 4, with the helper line *"Break cause and effect. Continue by association."*
+  - Wormhole → a door name and the searchable list of the player's own other cards.
+  - Dead End → confirms in place.
+- The loop is now: **write, cut, write.**
+- Your own cut card whose paths are all unwritten shows a quiet **Change the cut** (R17).
+- Someone else's `open` card shows one line in place of paths: *"{name} hasn't cut this card yet."*
+- **Look:** an `open` card has a white frame; it takes its cut's colour when cut. On the Map an `open` card is white, and the viewer's own pulse gently.
+- **Me drawer:** add **"Not yet cut"**, the player's own `open` cards, each with **Open**.
+- Player-facing copy says "cut", never "type" or "hand". (The word is Neven's to change.)
+
+### 15.5 Existing data
+
+Cards already typed (the `stress` world, sandbox tests) stay as they are and behave as before. No conversion.
+
+### 15.6 Acceptance (in addition to re-running 2–17)
+
+- **A1.** On a 360 px phone, a new player: scenario → new path → write → Play card → lands on an open card → Fork → two names → Deal → two face-down cards appear. Under 90 seconds, no instruction.
+- **A2.** Another player sees no cut controls on that open card, and `POST /cards/:id/cut` returns 403 for them.
+- **A3.** Cutting an already-cut card returns 409.
+- **A4.** Uncut works while all paths are unwritten; it is refused once another player has written or is writing on one.
+- **A5.** A wormhole cut rejects the card itself and any card by another player as its target.
+- **A6.** A previously typed card in `stress` renders and walks exactly as before.
+
+### 15.7 Cutoff and rollback
+
+Known-good release: `main` at `2c16471`. v2.2 must be deployed and re-verified by **09:00 ET Tuesday**. If it is not, say so in your report, redeploy `2c16471` plus F1/F2, and run `UPDATE cards SET type='dead_end' WHERE type='open'` so the older client never meets an `open` card. Do not put QA writing in the `mdst1050` world.
