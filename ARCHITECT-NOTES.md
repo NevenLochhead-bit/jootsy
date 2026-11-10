@@ -44,6 +44,7 @@ Decided:
 | Nov 10 | **Words on hover only; colour is the code.** "Maybe those words are only hover-over visible, and each transition is colour coded depending on what type it is." §15.4a revised in v2.3. |
 | Nov 10 | **The student's job is three things.** "The student really just needs to focus on naming their cards, adding an image or video, and a description of some type of narrative fragment." Read by me as: a cut is one click and deals blank cards; whoever writes a card names it. Issued in v2.3. **Flagged to him as item 5 below in case I have over-read it.** |
 | Nov 10 | **No perimeters; the task is five cards.** "I also don't think we need the perimeter rings, my task for students is to play at least five cards, that's it, we don't need the perimeter." **Supersedes** the two Nov 9 rows above on thresholds and the End of Game Perimeter. Issued as §15.4c in v2.4: no rings drawn; `jootsy_min_cards` = 5. |
+| Nov 10 | **Play continues; players are visible.** "Play can continue — and somewhere we can see what cards people have played, you can click the name of the user and see their cards light up on the overall deck." Mostly already in v2 (Map player picker); sharpened as §15.4d. |
 
 Open:
 
@@ -98,6 +99,8 @@ Open:
 ## Handoff log
 
 Newest first. Each entry: commit or file, what is ready, who acts next.
+
+- **Nov 10, 01:45 ET — Architect.** `docs/JOOTSY_TUESDAY_SPEC.md` v2.4: added §15.4d "Players on the Map" (the existing picker becomes a visible Players panel with counts; author names link to it). Small, inside the freeze because it restates an existing feature. **Next: Engineer** — F1, F2, then §15.
 
 - **Nov 10, 01:40 ET — Architect.** `docs/JOOTSY_TUESDAY_SPEC.md` → **v2.4**: added §15.4c "No perimeters" (no rings on the Map, no "Ring n", task is five cards, settings trimmed, acceptance 13 reworded). Nothing else in §15 changed since the 01:30 entry. **I am freezing the Tuesday spec here**: further Designer ideas go to Thursday unless they fix a defect. **Next: Engineer** — F1, F2, then §15 (v2.4).
 

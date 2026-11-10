@@ -352,6 +352,14 @@ Designer (Neven, Nov 10): *"I also don't think we need the perimeter rings. My t
 - **Instructor players table:** drop "furthest ring"; keep cards played, and mark players who have reached `jootsy_min_cards`.
 - Acceptance item 13 becomes: every card's distance from the centre on the Map equals its depth; no two nodes overlap in the `stress` world; **no ring or perimeter is drawn anywhere.**
 
+### 15.4d Players on the Map
+
+Designer (Neven, Nov 10): *"play can continue — and somewhere we can see what cards people have played; you can click the name of the user and see their cards light up on the overall deck."* This sharpens the player picker already in §7.3; it is for every player, not only the instructor.
+
+- The Map's player picker becomes a **Players** panel: every player's name with their count of cards played, most cards first. Tap a name: that player's cards light up and everyone else's dim to 35%. Tap again to clear. **Mine** stays as the shortcut for yourself.
+- In the Card view, tapping the author's name under a card opens the Map with that player lit.
+- Nothing stops at five cards. The count keeps rising and play continues.
+
 ### 15.5 Existing data
 
 Cards already typed and paths already named (the `stress` world, sandbox tests) stay as they are and behave as before. No conversion.
