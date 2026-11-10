@@ -50,6 +50,7 @@ Open:
 3. **Cuts on the card's edges.** Neven proposed (Nov 10, 00:12) that the cut buttons sit on all four sides of the card, any cut from any side: "I could draw a fork out of the top, or a wormhole on the side to the right." My reply: yes to cuts living on the card's edges; no to the side choosing where the next card goes, because that returns placement to the player and breaks the derived map (ring = distance). Offered instead: fixed meanings per edge (back / forward / the two lateral doors). Thursday at the earliest; nothing to build. Awaiting his answer.
 4. **The word "cut".** v2.2 uses his word from "negotiating the cut" in all player-facing copy ("How does it cut?"). His to confirm or replace.
 5. **Who names a card?** v2.3 has the writer name their own card, and a Fork deal blank cards with one click. Before, the person who forked named both paths, as on the old board ("devise the forks"). The forker can still pencil a name on a blank card as an invitation, but does not have to. Confirm, or say the forker must name the paths.
+6. **"Describe an image": who makes the images, and when?** Raised by Neven (Nov 10, 00:17). v2.3 §15.4b only stores the description and shows it as a placeholder; it is last in the build order and droppable. My default: no generation in the live game; after Thursday, an instructor-triggered batch that he reviews before any image appears on a card. Needs his answer before anything generates.
 
 ## Architect decisions (mine; not for Designer unless he objects)
 
@@ -95,6 +96,8 @@ Open:
 ## Handoff log
 
 Newest first. Each entry: commit or file, what is ready, who acts next.
+
+- **Nov 10, 01:30 ET — Architect.** `docs/JOOTSY_TUESDAY_SPEC.md` v2.3: added §15.4b "Describe an image" (store-only, optional, built last). No change to anything else in §15. **Next: Engineer**, unchanged.
 
 - **Nov 10, 01:20 ET — Architect.** `docs/JOOTSY_TUESDAY_SPEC.md` → **v2.3**: §15 rewritten in place. Changes from v2.2: cuts are one click and deal blank paths (`count`, not names); the writer names the card in `POST /plays`; `paths.label` may be empty while unwritten; optional pencilling (R19); connection words on hover or tap only (§15.4a); acceptance A1, A7, A8. **Next: Engineer** — F1, F2, then §15. If you had started on v2.2, the list in this entry is the whole difference.
 

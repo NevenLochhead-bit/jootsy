@@ -332,6 +332,15 @@ Designer (Neven, Nov 10): *"the arrows have a trace of what the transition is…
 - **Card view.** The "came from" line and each path tile carry their cut's colour and icon; the word shows on hover or tap.
 - A path's cut is the type of the card it leaves, so no new data is needed.
 
+### 15.4b "Describe an image" — last, and only if A1–A8 already pass
+
+Designer (Neven, Nov 10): *"we could also have a 'describe image' option and AI could make it for us when we later string it together."* On Tuesday this **stores a description only**. No image generation, no AI call, no key.
+
+- New nullable column `cards.image_prompt` (text, up to 300 characters). Accepted by `POST /plays` and `PATCH /cards/:id`; returned in `/state`.
+- Composer: the media row becomes **Add image · Paste a link · Describe an image**. The third opens one line: *"Describe the image this card should have."* A card has either media or a description, not both.
+- Card view: where the image would be, a framed placeholder with the description in italics and the caption "image to come". Nothing on the Map.
+- If this is not built by the cutoff, leave it out entirely; nothing else depends on it.
+
 ### 15.5 Existing data
 
 Cards already typed and paths already named (the `stress` world, sandbox tests) stay as they are and behave as before. No conversion.
