@@ -70,4 +70,10 @@ assert.deepEqual((await db.pool.query("SELECT p.* FROM players p JOIN worlds w O
 const demoAfter=(await db.pool.query("SELECT p.name,p.name_key FROM players p JOIN worlds w ON w.id=p.world_id WHERE w.slug='sandbox' AND NOT p.is_instructor")).rows;
 assert(demoAfter.length>0);for(const p of demoAfter){assert.match(p.name,/^[A-Z][a-z]+ [A-Z][a-z]+$/);assert.equal(p.name_key,p.name.toLowerCase());}
 console.log('PASS demo-name migration: fictional names; class/stress/instructor unchanged; player IDs, passcodes and tokens preserved.');
+await db.pool.query(await readFile('netlify/database/migrations/20261110170100_number_demo_players.sql','utf8'));
+assert.deepEqual((await db.pool.query("SELECT id,world_id,pass_hash,token_version,is_instructor FROM players ORDER BY id")).rows,demoBefore);
+assert.deepEqual((await db.pool.query("SELECT p.* FROM players p JOIN worlds w ON w.id=p.world_id WHERE w.slug<>'sandbox' OR p.is_instructor ORDER BY p.id")).rows,otherBefore);
+const numbered=(await db.pool.query("SELECT p.name,p.name_key FROM players p JOIN worlds w ON w.id=p.world_id WHERE w.slug='sandbox' AND NOT p.is_instructor ORDER BY p.created_at,p.id")).rows;
+assert.equal(numbered.length,demoAfter.length);numbered.forEach((p,i)=>{assert.equal(p.name,`Student ${i+1}`);assert.equal(p.name_key,`student ${i+1}`);});
+console.log('PASS numbered demo players: complete consecutive list; identities preserved; no class/stress/instructor changes.');
 console.log('PASS v4: additive migration; v3 legacy data; no public blanks; private sessions incl instructor; second device; one-session guard; stage cap; atomic commit; blank rejection; author permissions; peer news; Change tree/link/subtree preservation; discard; Wormhole/Jootsy permissions + five-card threshold + instructor exemption; global and target Jootsy events; hidden names + incoming path revision deltas; concurrent same-cell write; ten concurrent independent commits; scenario admin; token reset; SQL tree invariant.');await db.pool.end();await closeDatabase();

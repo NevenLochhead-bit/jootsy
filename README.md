@@ -1,4 +1,4 @@
-Current release: spec v4.1 §17 A–D including C2 video plus the Designer-approved header/source design, runtime `01a3e7f` (PR #11), published Nov 10 at 11:39 ET. The six accepted class starters are live. Sound and video shipped. Start with [ENGINEER-HANDOFF.md](ENGINEER-HANDOFF.md) for the checks and next actor. Architect owns the authoritative [spec](https://github.com/NevenLochhead-bit/jootsy/blob/architect/docs/JOOTSY_TUESDAY_SPEC.md) and [notes](https://github.com/NevenLochhead-bit/jootsy/blob/architect/ARCHITECT-NOTES.md) on branch `architect`.
+Current release: spec v4.1 §17 A–D including C2 video plus the Designer-approved header/source design, white-logo runtime `9c3c2aa` (PR #12), published Nov 10 at 11:59:50 ET. The six accepted class starters are live. Sound and video shipped. Start with [ENGINEER-HANDOFF.md](ENGINEER-HANDOFF.md) for the checks and next actor. Architect owns the authoritative [spec](https://github.com/NevenLochhead-bit/jootsy/blob/architect/docs/JOOTSY_TUESDAY_SPEC.md) and [notes](https://github.com/NevenLochhead-bit/jootsy/blob/architect/ARCHITECT-NOTES.md) on branch `architect`.
 
 # Jootsy!
 
