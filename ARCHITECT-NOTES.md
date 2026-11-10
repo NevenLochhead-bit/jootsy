@@ -2,9 +2,9 @@
 
 ## Current focus
 
-- **State (Tue Nov 10, 01:00 ET):** Slices A + B + C are deployed (`main`, code release `2c16471`). Review 1 found no blocking defect. Neven has decided the game changes to **"write, then cut"**: cards are all the same; Fork, Destiny, Dream, Wormhole and Dead End are options for how the author puts them in relation.
-- **Next to act: Engineer.** In this order: (1) F1 and F2 below; (2) spec **v2.2**, `docs/JOOTSY_TUESDAY_SPEC.md` §15 on branch `architect`. Cutoff 09:00 ET; rollback recipe in §15.7.
-- **Then: Architect.** Review of v2.2 against §15.6.
+- **State (Tue Nov 10, 01:20 ET):** Slices A + B + C are deployed (`main`, code release `2c16471`). Review 1 found no blocking defect. Neven has decided the game changes to **"write, then cut"**: cards are all the same; Fork, Destiny, Dream, Wormhole and Dead End are options for how the author puts them in relation.
+- **Next to act: Engineer.** In this order: (1) F1 and F2 below; (2) spec **v2.3**, `docs/JOOTSY_TUESDAY_SPEC.md` §15 on branch `architect`. Cutoff 09:00 ET; rollback recipe in §15.7.
+- **Then: Architect.** Review of v2.3 against §15.6.
 - **Next to act: Neven as Designer**, on items 2–4 under "Designer → Open". None blocks the Engineer.
 - **Class:** Tue Nov 10, 12:30 pm ET. `2c16471` is class-ready as it stands and is the fallback if v2.2 misses its cutoff.
 
@@ -41,12 +41,15 @@ Decided:
 | Nov 9 | **End of Game Perimeter is an open boundary.** Asked by Bolus whether he intended a hard stop at ring 11 or whether play should remain possible beyond it. Answer: "still allows play." The perimeter at ring 11 is drawn and labelled, and cards may be played beyond it. This matches the spec (§8.5); no change. |
 | Nov 10 | **Write, then cut.** "Every card is essentially the same, but you determine how it branches… it's all about negotiating the cut from one to the next." And: "to me it is cleaner and I think we should change it. so we aren't playing specific cards but have these options for how to put them in relation." Issued as spec v2.2 (§15) for Tuesday. The hand of typed cards is removed; face-down cards and card backs stay. |
 | Nov 10 | **The trace.** "The arrows have a trace of what the transition is, I can see a little arrow with the word wormhole on it for instance, so we understand the movement." Added to v2.2 as §15.4a. |
+| Nov 10 | **Words on hover only; colour is the code.** "Maybe those words are only hover-over visible, and each transition is colour coded depending on what type it is." §15.4a revised in v2.3. |
+| Nov 10 | **The student's job is three things.** "The student really just needs to focus on naming their cards, adding an image or video, and a description of some type of narrative fragment." Read by me as: a cut is one click and deals blank cards; whoever writes a card names it. Issued in v2.3. **Flagged to him as item 5 below in case I have over-read it.** |
 
 Open:
 
 2. **Netlify plan.** Which plan is the `jootsy` site on, and what does its function usage allowance look like? See F2. Only he can see the account.
 3. **Cuts on the card's edges.** Neven proposed (Nov 10, 00:12) that the cut buttons sit on all four sides of the card, any cut from any side: "I could draw a fork out of the top, or a wormhole on the side to the right." My reply: yes to cuts living on the card's edges; no to the side choosing where the next card goes, because that returns placement to the player and breaks the derived map (ring = distance). Offered instead: fixed meanings per edge (back / forward / the two lateral doors). Thursday at the earliest; nothing to build. Awaiting his answer.
 4. **The word "cut".** v2.2 uses his word from "negotiating the cut" in all player-facing copy ("How does it cut?"). His to confirm or replace.
+5. **Who names a card?** v2.3 has the writer name their own card, and a Fork deal blank cards with one click. Before, the person who forked named both paths, as on the old board ("devise the forks"). The forker can still pencil a name on a blank card as an invitation, but does not have to. Confirm, or say the forker must name the paths.
 
 ## Architect decisions (mine; not for Designer unless he objects)
 
@@ -92,6 +95,8 @@ Open:
 ## Handoff log
 
 Newest first. Each entry: commit or file, what is ready, who acts next.
+
+- **Nov 10, 01:20 ET — Architect.** `docs/JOOTSY_TUESDAY_SPEC.md` → **v2.3**: §15 rewritten in place. Changes from v2.2: cuts are one click and deal blank paths (`count`, not names); the writer names the card in `POST /plays`; `paths.label` may be empty while unwritten; optional pencilling (R19); connection words on hover or tap only (§15.4a); acceptance A1, A7, A8. **Next: Engineer** — F1, F2, then §15. If you had started on v2.2, the list in this entry is the whole difference.
 
 - **Nov 10, 01:10 ET — Architect.** `docs/JOOTSY_TUESDAY_SPEC.md` v2.2: added §15.4a "The trace on every connection" and acceptance A7. Part of the same v2.2 work; no new data. **Next: Engineer**, unchanged (F1, F2, then §15).
 
