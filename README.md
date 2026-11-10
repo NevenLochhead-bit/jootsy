@@ -1,4 +1,4 @@
-Current release: **spec v4 §16 core**, runtime `19fdf3b` (PR #6). Start with [V4-REPORT.md](V4-REPORT.md) and [ENGINEER-HANDOFF.md](ENGINEER-HANDOFF.md). Architect owns the authoritative spec and notes on branch `architect`.
+Current release: spec v4.1 §17 A–D including C2 video, runtime `1509e36` (PR #10), published Nov 10 at 10:53 ET. Sound and video shipped. Start with [ENGINEER-HANDOFF.md](ENGINEER-HANDOFF.md) for the final checks and next actor. Architect owns the authoritative [spec](https://github.com/NevenLochhead-bit/jootsy/blob/architect/docs/JOOTSY_TUESDAY_SPEC.md) and [notes](https://github.com/NevenLochhead-bit/jootsy/blob/architect/ARCHITECT-NOTES.md) on branch `architect`.
 
 # Jootsy!
 
@@ -12,7 +12,7 @@ Players choose their own name and passcode. Returning players use the same pair.
 
 ## Stack and development
 
-Vanilla JavaScript, Canvas with d3-hierarchy, modern Netlify Functions, transactional Netlify Postgres, and Netlify Blobs for images. No game state lives in browser storage; device tokens, unread markers and unsent writing drafts do.
+Vanilla JavaScript, Canvas with d3-hierarchy, modern Netlify Functions, transactional Netlify Postgres, and Netlify Blobs for images, sound and video. No game state lives in browser storage; device tokens, unread markers and unsent writing drafts do.
 
 Use Node 22.12 or newer. Run `npm install`, `npm run check`, `npm run build`, then `netlify dev` against a local database. Committed migrations are under `netlify/database/migrations`; apply local migrations with `netlify database migrations apply`. Production migrations are applied by Netlify during deployment. Do not apply schema changes directly to the hosted database.
 
@@ -28,6 +28,6 @@ Terminal network access was restricted during the build. The temporary source-bu
 
 ## Tuesday boundaries
 
-Core v4 uses private three-stage sessions, autosave, Change/Undo and atomic Commit. Only committed cards appear on the Board. Fork, Destiny and Dream create draft cells; Wormhole links your own committed cards; Jootsy links into another player’s committed, visible timeline after five committed cards (instructor exempt). Dead End and public blank cards are retired. Cards shows your threads or resumes your open session. No ring rule stops play.
+Core v4 uses private three-stage sessions, autosave, Change/Undo and atomic Commit. Only committed cards appear on the Board. Fork, Destiny and Dream create draft cells; Wormhole links your own committed cards; Jootsy links into another player’s committed, visible timeline after five committed cards (instructor exempt). Dead End and public blank cards are retired. Cards shows your threads and an unfinished-session Resume banner. No ring rule stops play.
 
-The additive migration retains v3 code rollback compatibility. Tier 2 visual polish waits for explicit Neven go; see V4-REPORT.md for exact no-go cleanup SQL. Images remain downscaled to 1600 pixels and JPEG before upload; media links support the existing image/audio/video and provider embeds.
+Additive migrations retain existing cards and v3 rollback compatibility; see V4-REPORT.md for fallback cleanup. Images are downscaled to 1600 pixels and JPEG (1.5 MB cap). MP3/M4A sound is capped at 2 MB and MP4 video at 4 MB, checked by content. Each card has an image or a video, plus an optional sound. All media share 60 uploads per player/world. Media starts on click; video is muted and loops. Wire lights use cached geometry and a 30 fps ceiling, with viewport culling, hidden-page pause and static reduced motion. Refresh scans for 750 ms after sync.
