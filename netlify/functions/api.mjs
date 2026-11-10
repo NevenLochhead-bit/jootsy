@@ -112,6 +112,7 @@ export default async function handler(req){
    return {world:w,rev:Number(w.rev),cards,paths,players,events,player:publicPlayer(p),edit_session:await activeSession(c,w,p),full:since===0};
   },true));
   if(route[0]==='uploads'&&method==='POST'){
+   await transaction(slug,async(c,w)=>{await auth(c,w,req);},true);
    const bytes=await req.arrayBuffer(),data=new Uint8Array(bytes),isSound=url.searchParams.get('kind')==='audio';let type;
    if(isSound){type=soundType(bytes);if(bytes.byteLength>SOUND_LIMIT||!type)fail(400,'sound',SOUND_ERROR);}
    else{if(bytes.byteLength>IMAGE_LIMIT)fail(400,'image','Image is over 1.5 MB after resizing. Choose a smaller image.');if(data[0]!==255||data[1]!==216||data[2]!==255)fail(400,'image','Choose a JPEG image under 1.5 MB.');type={extension:'jpg',contentType:'image/jpeg'};}

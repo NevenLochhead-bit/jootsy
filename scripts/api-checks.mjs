@@ -43,6 +43,7 @@ const ten=await Promise.all(Array.from({length:10},(_,i)=>join(`Concurrent ${i}`
 const scenario=await call('scenarios','POST',{title:'No starting paths',body:'I begin.',paths:['Ignored']},admin);assert(scenario.card);assert.equal((await db.pool.query('SELECT count(*) AS n FROM paths WHERE from_card_id=$1',[scenario.card.id])).rows[0].n,'0');
 assert.equal((await call('join','POST',{name:'V4 A',passcode:'wrong',mode:'returning'})).status,401);const reset=await call(`players/${b.player.id}/reset-passcode`,'POST',{},admin);assert(reset.passcode);assert.equal((await state(b)).status,401);
 const objects=new Map();setTestMediaStore({set:async(k,v)=>objects.set(k,v),get:async k=>objects.get(k)||null});
+const noAuth=await handler(new Request('https://jootsy.test/api/w/sandbox/uploads?kind=audio',{method:'POST',body:'invalid'}));assert.equal(noAuth.status,401);
 const mp3=await readFile('tests/fixtures/tone.mp3'),m4a=await readFile('tests/fixtures/tone.m4a'),wav=await readFile('tests/fixtures/refused.wav');
 const upload=async(owner,bytes,kind='audio')=>{const r=await handler(new Request(`https://jootsy.test/api/w/sandbox/uploads?kind=${kind}`,{method:'POST',headers:{authorization:`Bearer ${owner.token}`,'content-type':'application/octet-stream'},body:bytes}));return {status:r.status,...await r.json()};};
 const u1=await upload(a,mp3),u2=await upload(a,m4a);assert.equal(u1.status,201);assert.equal(u2.status,201);assert(u1.url.endsWith('.mp3'));assert(u2.url.endsWith('.m4a'));
