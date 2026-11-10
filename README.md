@@ -1,3 +1,5 @@
+Current release: **spec v3**, code `cd96e44`. Start with [V3-REPORT.md](V3-REPORT.md) and [ENGINEER-HANDOFF.md](ENGINEER-HANDOFF.md). Earlier slice reports describe v2 and are retained as history.
+
 # Jootsy!
 
 Collaborative branching-narrative card game for MDST 1050.

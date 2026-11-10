@@ -26,19 +26,54 @@ const own=(card,p)=>{if(card.author_id!==p.id)fail(403,'forbidden','Only the aut
 async function card(c,w,id){const a=(await c.query('SELECT * FROM cards WHERE id=$1 AND world_id=$2 AND NOT deleted',[requireId(id),w.id])).rows[0];if(!a)fail(404,'card','This card is no longer here.');return a;}
 async function path(c,w,id){const a=(await c.query('SELECT * FROM paths WHERE id=$1 AND world_id=$2 AND NOT deleted',[requireId(id),w.id])).rows[0];if(!a)fail(404,'path','This path is no longer here.');await card(c,w,a.from_card_id);return a;}
 const pathsOf=async(c,id)=>(await c.query('SELECT * FROM paths WHERE from_card_id=$1 AND NOT deleted ORDER BY position',[id])).rows;
-async function addPath(c,w,parent,p,rev,kind,cutId,target=null,label=''){
- const n=(await c.query('SELECT COALESCE(max(position),-1)+1 AS n FROM paths WHERE from_card_id=$1',[parent.id])).rows[0].n;
- return (await c.query('INSERT INTO paths(world_id,from_card_id,label,created_by,position,rev,kind,cut_id,to_card_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *',[w.id,parent.id,label,p.id,n,rev,kind,cutId,target])).rows[0];
+const links=['wormhole','jootsy'],kinds=['fork','destiny','dream'];
+const optionalText=(v,max,label)=>{if(typeof v!=='string'||Array.from(v.trim()).length>max)fail(400,'invalid',`${label} must be at most ${max} characters.`);return v.trim();};
+async function activeSession(c,w,p){return (await c.query("SELECT * FROM edit_sessions WHERE world_id=$1 AND player_id=$2 AND status='open'",[w.id,p.id])).rows[0]||null;}
+async function editable(c,w,p,a){if(a.draft){own(a,p);const session=await activeSession(c,w,p);if(!session||session.id!==a.session_id)fail(409,'session','This session is no longer open.');}return a;}
+async function sessionSource(c,w,p,source,rev,change=false){
+ let session=await activeSession(c,w,p);
+ if(source.draft){await editable(c,w,p,source);const parent=await path(c,w,source.parent_path_id);if(parent.from_card_id!==session.anchor_card_id)fail(409,'stage','Commit to the board, then keep going.');}
+ else if(session){if(session.anchor_card_id!==source.id)fail(409,'session_open','Resume or discard your open session first.',{anchor_id:session.anchor_card_id,session_id:session.id});}
+ else {if(change)fail(409,'session','Start a session first.');session=(await c.query('INSERT INTO edit_sessions(world_id,player_id,anchor_card_id,rev) VALUES($1,$2,$3,$4) RETURNING *',[w.id,p.id,source.id,rev])).rows[0];}
+ return session;
 }
-const blankCount=async(c,w,p)=>Number((await c.query("SELECT count(*) AS n FROM paths WHERE world_id=$1 AND created_by=$2 AND NOT deleted AND to_card_id IS NULL AND kind<>'wormhole'",[w.id,p.id])).rows[0].n);
-const cap=()=>fail(409,'blank_cap','Write or discard one of your blank cards first.');
+async function linkTarget(c,w,p,source,kind,targetId){
+ own(source,p);const target=await card(c,w,targetId);if(target.draft)fail(403,'target','Choose a committed card.');
+ if(target.id===source.id)fail(400,'target','Choose another card.');
+ if(kind==='wormhole'){own(target,p);}
+ else {if(!w.jootsy_enabled)fail(409,'locked','Jootsy! is not enabled yet.');const n=Number((await c.query('SELECT count(*) AS n FROM cards WHERE world_id=$1 AND author_id=$2 AND NOT deleted AND NOT draft',[w.id,p.id])).rows[0].n);if(!p.is_instructor&&n<w.jootsy_min_cards)fail(409,'locked',`${n} of ${w.jootsy_min_cards} cards played.`);if(!target.author_id||target.author_id===p.id||target.hidden)fail(403,'target',"Choose a visible committed card by another player.");}
+ return target;
+}
+async function makeDraftPath(c,w,p,source,session,kind,rev,cutId,target=null){
+ const n=(await c.query('SELECT COALESCE(max(position),-1)+1 AS n FROM paths WHERE from_card_id=$1',[source.id])).rows[0].n;
+ let label='';if(target)label=target.type==='scenario'?target.scenario_title:(await path(c,w,target.parent_path_id)).label;
+ return (await c.query('INSERT INTO paths(world_id,from_card_id,label,created_by,position,rev,kind,cut_id,to_card_id,draft,session_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,true,$10) RETURNING *',[w.id,source.id,label,p.id,n,rev,kind,cutId,target?.id||null,session.id])).rows[0];
+}
+async function removeDraftPath(c,w,p,a,rev){
+ if(!a.draft||a.created_by!==p.id)fail(403,'forbidden','Only your own draft transition can change.');
+ if(a.to_card_id&&!links.includes(a.kind)){const child=await card(c,w,a.to_card_id);await editable(c,w,p,child);for(const next of await pathsOf(c,child.id))await removeDraftPath(c,w,p,next,rev);await c.query('UPDATE cards SET deleted=true,rev=$2,updated_at=now() WHERE id=$1',[child.id,rev]);}
+ await c.query('UPDATE paths SET deleted=true,rev=$2 WHERE id=$1',[a.id,rev]);
+}
+async function transition(c,w,p,source,b,rev,change=false){
+ if(![...kinds,...links].includes(b.kind))fail(400,'kind','Choose Fork, Destiny, Dream, Wormhole or Jootsy!.');
+ const session=await sessionSource(c,w,p,source,rev,change),existing=(await pathsOf(c,source.id)).filter(a=>a.draft&&a.session_id===session.id);
+ if(!change&&existing.length)fail(409,'transition','Use Change on this transition.',{anchor_id:session.anchor_card_id});
+ if(change&&!existing.length)fail(409,'transition','Only a draft transition can change.');
+ const target=links.includes(b.kind)?await linkTarget(c,w,p,source,b.kind,b.to_card_id):null;
+ const old=existing[0]?.kind,cutId=existing[0]?.cut_id||randomUUID();let kept=[];
+ if(change&&kinds.includes(old)&&kinds.includes(b.kind)){
+  kept=existing.slice(0,b.kind==='fork'?2:1);for(const a of existing.slice(kept.length))await removeDraftPath(c,w,p,a,rev);
+  for(const a of kept)await c.query('UPDATE paths SET kind=$2,rev=$3 WHERE id=$1',[a.id,b.kind,rev]);
+ }else if(change)for(const a of existing)await removeDraftPath(c,w,p,a,rev);
+ const n=b.kind==='fork'?2:1;while(kept.length<n)kept.push(await makeDraftPath(c,w,p,source,session,b.kind,rev,cutId,target));
+ await c.query('UPDATE edit_sessions SET rev=$2,updated_at=now() WHERE id=$1',[session.id,rev]);return {session,paths:kept,rev:Number(rev)};
+}
 async function event(c,w,type,p,cardId,pathId,target=null){await c.query('INSERT INTO events(world_id,type,actor_id,target_player_id,card_id,path_id,rev) VALUES($1,$2,$3,$4,$5,$6,$7)',[w.id,type,p.id,target,cardId,pathId,w.rev]);}
-const kinds=['fork','destiny','dream'];
 function media(b){if(!b.media_url)return {kind:null,url:null};let u;try{u=new URL(b.media_url);}catch{fail(400,'media','Paste a complete https link.');}if(u.protocol!=='https:')fail(400,'media','Media links must use https.');if(u.href.length>2048)fail(400,'media','That link is too long.');if(!['image','embed'].includes(b.media_kind))fail(400,'media','Choose an image or a media link.');return {kind:b.media_kind,url:u.href};}
 async function removeCard(c,w,a,rev){
  await c.query('UPDATE cards SET deleted=true,rev=$2,updated_at=now() WHERE id=$1',[a.id,rev]);
- await c.query("UPDATE paths SET deleted=true,rev=$2 WHERE kind='wormhole' AND (from_card_id=$1 OR to_card_id=$1)",[a.id,rev]);
- if(a.parent_path_id)await c.query('UPDATE paths SET to_card_id=NULL,taken_at=NULL,rev=$2 WHERE id=$1',[a.parent_path_id,rev]);
+ await c.query("UPDATE paths SET deleted=true,rev=$2 WHERE kind IN ('wormhole','jootsy') AND (from_card_id=$1 OR to_card_id=$1)",[a.id,rev]);
+ if(a.parent_path_id)await c.query('UPDATE paths SET deleted=true,to_card_id=NULL,taken_at=NULL,rev=$2 WHERE id=$1',[a.parent_path_id,rev]);
 }
 export default async function handler(req){
  try{
@@ -63,27 +98,47 @@ export default async function handler(req){
   }
   if(route[0]==='state'&&method==='GET')return json(await transaction(slug,async(c,w)=>{
    const p=await auth(c,w,req);const n=Number(url.searchParams.get('since')||0);if(!Number.isSafeInteger(n)||n<0)fail(400,'revision','That revision is not valid.');const since=n>Number(w.rev)?0:n;
-   const cards=(await c.query('SELECT * FROM cards WHERE world_id=$1 AND rev>$2 ORDER BY seq',[w.id,since])).rows.map(a=>a.hidden&&!p.is_instructor?{...a,body:'Hidden by the instructor',media_kind:null,media_url:null,door_label:null,target_card_id:null}:a);
-   const paths=(await c.query('SELECT * FROM paths WHERE world_id=$1 AND rev>$2 ORDER BY position',[w.id,since])).rows;
+   const cards=(await c.query('SELECT * FROM cards WHERE world_id=$1 AND rev>$2 AND (NOT draft OR author_id=$3) ORDER BY seq',[w.id,since,p.id])).rows.map(a=>a.hidden&&!p.is_instructor?{...a,scenario_title:a.type==='scenario'?'Hidden':a.scenario_title,body:'Hidden by the instructor',media_kind:null,media_url:null,door_label:null,target_card_id:null}:a);
+   const paths=(await c.query("SELECT p.*, CASE WHEN target.hidden AND NOT $4 THEN 'Hidden' ELSE p.label END AS label FROM paths p LEFT JOIN cards target ON target.id=p.to_card_id WHERE p.world_id=$1 AND p.rev>$2 AND (NOT p.draft OR p.created_by=$3) ORDER BY p.position",[w.id,since,p.id,p.is_instructor])).rows;
    const players=(await c.query('SELECT id,name,is_instructor,last_seen_at FROM players WHERE world_id=$1',[w.id])).rows.map(q=>p.is_instructor?q:{id:q.id,name:q.name});
-   const events=(await c.query('SELECT * FROM events WHERE world_id=$1 AND rev>$2 AND (target_player_id=$3 OR actor_id=$3) ORDER BY created_at DESC',[w.id,since,p.id])).rows;
-   return {world:w,rev:Number(w.rev),cards,paths,players,events,player:publicPlayer(p),full:since===0};
+   const events=(await c.query("SELECT * FROM events WHERE world_id=$1 AND rev>$2 AND (target_player_id=$3 OR actor_id=$3 OR type IN ('session_committed','jootsy')) ORDER BY created_at DESC",[w.id,since,p.id])).rows;
+   return {world:w,rev:Number(w.rev),cards,paths,players,events,player:publicPlayer(p),edit_session:await activeSession(c,w,p),full:since===0};
   },true));
   if(route[0]==='uploads'&&method==='POST'){
    const identity=await transaction(slug,async(c,w)=>({p:await auth(c,w,req),w}),true);const bytes=await req.arrayBuffer();const b=new Uint8Array(bytes);if(bytes.byteLength>3500000||b[0]!==255||b[1]!==216||b[2]!==255)fail(400,'image','Choose a JPEG image smaller than 3.5 MB.');const key=`${identity.w.id}/${randomUUID()}.jpg`;await getStore({name:'jootsy-images',consistency:'strong'}).set(key,bytes,{metadata:{player_id:identity.p.id,world_id:identity.w.id}});return json({url:`${url.origin}/media/${key}`},201);
   }
   return json(await transaction(slug,async(c,w)=>{
-   const p=await auth(c,w,req);let b={};if(['POST','PATCH'].includes(method)&&req.headers.get('content-type')?.includes('json'))b=await req.json();
+   const p=await auth(c,w,req);let b={};if(['POST','PATCH','PUT'].includes(method)&&req.headers.get('content-type')?.includes('json'))b=await req.json();
    const rev=await bump(c,w);await c.query('UPDATE players SET last_seen_at=now(),rev=$2 WHERE id=$1',[p.id,rev]);
+   if(route[0]==='session'){
+    const session=await activeSession(c,w,p);if(!session)fail(409,'session','There is no open session.');
+    const offered=(await c.query('SELECT * FROM paths WHERE session_id=$1 AND draft AND NOT deleted ORDER BY position',[session.id])).rows;
+    if(route[1]==='commit'&&method==='POST'){
+     if(!offered.length)fail(409,'empty','Add a card or link before committing.');
+     if(offered.some(a=>!a.to_card_id))fail(409,'blank','Write every cell before committing. To keep one Fork card, Change to Destiny.');
+     const written=(await c.query('SELECT * FROM cards WHERE session_id=$1 AND draft AND NOT deleted ORDER BY seq',[session.id])).rows;
+     for(const a of written){text(a.body,600,'Fragment');text((await path(c,w,a.parent_path_id)).label,60,'Card name');}
+     for(const a of offered){await card(c,w,a.from_card_id);if(links.includes(a.kind))await linkTarget(c,w,p,await card(c,w,a.from_card_id),a.kind,a.to_card_id);else await card(c,w,a.to_card_id);}
+     await c.query('UPDATE cards SET draft=false,rev=$2,updated_at=now() WHERE session_id=$1 AND NOT deleted',[session.id,rev]);await c.query('UPDATE paths SET draft=false,rev=$2,taken_at=COALESCE(taken_at,now()) WHERE session_id=$1 AND NOT deleted',[session.id,rev]);
+     await c.query("UPDATE edit_sessions SET status='committed',rev=$2,updated_at=now() WHERE id=$1",[session.id,rev]);
+     for(const a of written)await event(c,w,'card_played',p,a.id,a.parent_path_id);
+     const anchor=await card(c,w,session.anchor_card_id),first=offered.find(a=>a.from_card_id===anchor.id);
+     if(anchor.author_id&&anchor.author_id!==p.id)await event(c,w,'card_cut',p,anchor.id,first?.id||null,anchor.author_id);
+     for(const a of offered.filter(a=>a.kind==='jootsy')){const target=await card(c,w,a.to_card_id);await event(c,w,'jootsy',p,a.from_card_id,a.id,target.author_id);}
+     await event(c,w,'session_committed',p,written.at(-1)?.id||anchor.id,null);
+     return {card_ids:written.map(a=>a.id),link_ids:offered.filter(a=>links.includes(a.kind)).map(a=>a.id),anchor_id:anchor.id,rev:Number(rev)};
+    }
+    if(route.length===1&&method==='DELETE'){
+     await c.query('UPDATE paths SET deleted=true,rev=$2 WHERE session_id=$1 AND draft',[session.id,rev]);await c.query('UPDATE cards SET deleted=true,rev=$2,updated_at=now() WHERE session_id=$1 AND draft',[session.id,rev]);await c.query("UPDATE edit_sessions SET status='discarded',rev=$2,updated_at=now() WHERE id=$1",[session.id,rev]);return {ok:true};
+    }
+   }
    if(route[0]==='plays'&&method==='POST'){
-    const a=await path(c,w,b.path_id),parent=await card(c,w,a.from_card_id);
-    if(a.created_by!==p.id)fail(403,'forbidden','Only the dealer can write this blank card.');
-    if(a.to_card_id)fail(409,'taken','Someone just played here.',{card_id:a.to_card_id});
-    if(!kinds.includes(a.kind))fail(400,'path','Choose one of your blank cards.');
-    const label=text(b.label,60,'Card name'),body=text(b.body,600,'Fragment'),m=media(b);
-    const aCard=(await c.query("INSERT INTO cards(world_id,type,author_id,body,media_kind,media_url,parent_path_id,depth,rev) VALUES($1,'open',$2,$3,$4,$5,$6,$7,$8) RETURNING *",[w.id,p.id,body,m.kind,m.url,a.id,parent.depth+1,rev])).rows[0];
-    await c.query('UPDATE paths SET label=$2,to_card_id=$3,taken_at=now(),rev=$4 WHERE id=$1',[a.id,label,aCard.id,rev]);
-    await event(c,w,'card_played',p,aCard.id,a.id);return {card:aCard,rev:Number(rev)};
+    const a=await path(c,w,b.path_id),session=await activeSession(c,w,p);if(a.created_by!==p.id)fail(403,'forbidden','Only the dealer can write this cell.');
+    if(!a.draft||!session||session.id!==a.session_id)fail(409,'session','Write inside your open session.');
+    if(a.to_card_id)fail(409,'taken','This cell is already written.',{card_id:a.to_card_id});if(!kinds.includes(a.kind))fail(400,'path','Choose a cell.');
+    const label=text(b.label,60,'Card name'),body=text(b.body,600,'Fragment'),m=media(b),parent=await card(c,w,a.from_card_id);
+    const made=(await c.query("INSERT INTO cards(world_id,type,author_id,body,media_kind,media_url,parent_path_id,depth,rev,draft,session_id) VALUES($1,'open',$2,$3,$4,$5,$6,$7,$8,true,$9) RETURNING *",[w.id,p.id,body,m.kind,m.url,a.id,parent.depth+1,rev,session.id])).rows[0];
+    await c.query('UPDATE paths SET label=$2,to_card_id=$3,rev=$4 WHERE id=$1',[a.id,label,made.id,rev]);return {card:made,rev:Number(rev)};
    }
    if(route[0]==='scenarios'){
     instructor(p);
@@ -93,44 +148,27 @@ export default async function handler(req){
     if(method==='DELETE'){if((await pathsOf(c,a.id)).length)fail(409,'written','This scenario already has a story growing from it.');await removeCard(c,w,a,rev);return {ok:true};}
    }
    if(route[0]==='cards'){
-    const a=await card(c,w,route[1]);
-    if(route[2]==='hide'&&method==='POST'){instructor(p);if(typeof b.value!=='boolean')fail(400,'hidden','Choose hide or unhide.');await c.query('UPDATE cards SET hidden=$2,rev=$3,updated_at=now() WHERE id=$1',[a.id,b.value,rev]);await event(c,w,'card_hidden',p,a.id,null,a.author_id);return {ok:true};}
-    if(route[2]==='cuts'&&method==='POST'){
-     if(a.type==='dead_end')fail(409,'dead_end','This is a dead end. Walk back to cut from another card.');
-     if(![...kinds,'wormhole'].includes(b.kind))fail(400,'kind','Choose Fork, Destiny, Dream or Wormhole.');
-     const cutId=randomUUID(),added=[];
-     if(b.kind==='wormhole'){
-      own(a,p);const target=await card(c,w,b.to_card_id);own(target,p);
-      if(target.id===a.id)fail(400,'target','Choose one of your other cards.');
-      const incoming=target.parent_path_id?(await path(c,w,target.parent_path_id)):null;
-      added.push(await addPath(c,w,a,p,rev,'wormhole',cutId,target.id,b.label===undefined?(incoming?.label||'Card'):text(b.label,60,'Door name')));
-     }else{
-      const n=b.kind==='fork'?2:1;if(await blankCount(c,w,p)+n>8)cap();
-      for(let i=0;i<n;i++)added.push(await addPath(c,w,a,p,rev,b.kind,cutId));
-     }
-     if(a.author_id&&a.author_id!==p.id)await event(c,w,'card_cut',p,a.id,added[0].id,a.author_id);
-     return {paths:added,rev:Number(rev)};
-    }
+    const a=await card(c,w,route[1]);await editable(c,w,p,a);
+    if(route[2]==='hide'&&method==='POST'){instructor(p);if(typeof b.value!=='boolean')fail(400,'hidden','Choose hide or unhide.');await c.query('UPDATE cards SET hidden=$2,rev=$3,updated_at=now() WHERE id=$1',[a.id,b.value,rev]);await c.query('UPDATE paths SET rev=$2 WHERE to_card_id=$1',[a.id,rev]);await event(c,w,'card_hidden',p,a.id,null,a.author_id);return {ok:true};}
+    if(route[2]==='cuts'&&method==='POST')return transition(c,w,p,a,b,rev);
+    if(route[2]==='cut'&&method==='PUT')return transition(c,w,p,a,b,rev,true);
+    if(route[2]==='dead-end'&&method==='POST')fail(410,'retired','A card with nowhere to go is already a dead end.');
     own(a,p);
-    if(route[2]==='dead-end'&&method==='POST'){
-     if(typeof b.value!=='boolean')fail(400,'dead_end','Choose Dead End or Undo.');
-     if(b.value&&(await pathsOf(c,a.id)).length)fail(409,'written','Discard the paths leaving this card before marking a dead end.');
-     return {card:(await c.query("UPDATE cards SET type=$2,rev=$3,updated_at=now() WHERE id=$1 RETURNING *",[a.id,b.value?'dead_end':'open',rev])).rows[0]};
-    }
     if(route.length===2&&method==='PATCH'){
-     const body=text(b.body??a.body,600,'Fragment'),m=media({media_kind:b.media_kind===undefined?a.media_kind:b.media_kind,media_url:b.media_url===undefined?a.media_url:b.media_url});
-     if(b.label!==undefined)await c.query('UPDATE paths SET label=$2,rev=$3 WHERE id=$1',[a.parent_path_id,text(b.label,60,'Card name'),rev]);
+     const body=(a.draft?optionalText:text)(b.body??a.body,600,'Fragment'),m=media({media_kind:b.media_kind===undefined?a.media_kind:b.media_kind,media_url:b.media_url===undefined?a.media_url:b.media_url});
+     if(b.label!==undefined)await c.query('UPDATE paths SET label=$2,rev=$3 WHERE id=$1',[a.parent_path_id,(a.draft?optionalText:text)(b.label,60,'Card name'),rev]);
      return {card:(await c.query('UPDATE cards SET body=$2,media_kind=$3,media_url=$4,rev=$5,updated_at=now() WHERE id=$1 RETURNING *',[a.id,body,m.kind,m.url,rev])).rows[0]};
     }
     if(route.length===2&&method==='DELETE'){
-     if((await pathsOf(c,a.id)).some(x=>x.kind!=='wormhole'))fail(409,'written','A path leaves this card, so it cannot be deleted.');
-     if(await blankCount(c,w,p)>=8)cap();await removeCard(c,w,a,rev);return {ok:true};
+     if((await pathsOf(c,a.id)).some(x=>!links.includes(x.kind)))fail(409,'written','A path leaves this card, so it cannot be deleted.');
+     if(a.draft)fail(409,'session','Change the transition or discard the session.');await removeCard(c,w,a,rev);return {ok:true};
     }
    }
    if(route[0]==='paths'&&route.length===2&&['PATCH','DELETE'].includes(method)){
     const a=await path(c,w,route[1]);if(a.created_by!==p.id)fail(403,'forbidden','Only the dealer can change this blank card.');
-    if(a.to_card_id&&a.kind!=='wormhole')fail(409,'written','A written path cannot be changed.');
-    if(method==='PATCH')await c.query('UPDATE paths SET label=$2,rev=$3 WHERE id=$1',[a.id,text(b.label,60,'Card name'),rev]);
+    if(a.draft)fail(409,'session','Change the transition or discard the session.');
+    if(a.to_card_id&&!links.includes(a.kind))fail(409,'written','A written path cannot be changed.');
+    if(method==='PATCH')await c.query('UPDATE paths SET label=$2,rev=$3 WHERE id=$1',[a.id,(a.draft?optionalText:text)(b.label,60,'Card name'),rev]);
     else await c.query('UPDATE paths SET deleted=true,rev=$2 WHERE id=$1',[a.id,rev]);return {ok:true};
    }
    if(route[0]==='settings'&&method==='PATCH'){instructor(p);for(const key of ['jootsy_min_cards'])if(b[key]!==undefined&&(!Number.isInteger(b[key])||b[key]<1||b[key]>100))fail(400,'settings','The card threshold must be a whole number from 1 to 100.');if(b.jootsy_enabled!==undefined&&typeof b.jootsy_enabled!=='boolean')fail(400,'settings','Choose on or off.');await c.query('UPDATE worlds SET jootsy_ring=$2,jootsy_min_cards=$3,end_ring=$4,jootsy_enabled=$5 WHERE id=$1',[w.id,w.jootsy_ring,b.jootsy_min_cards??w.jootsy_min_cards,w.end_ring,b.jootsy_enabled??w.jootsy_enabled]);return {ok:true};}
