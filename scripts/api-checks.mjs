@@ -1,8 +1,9 @@
 import {readFile} from 'node:fs/promises';
 import {strict as assert} from 'node:assert';
 import {getDatabase} from '@netlify/database';
-import handler from '../netlify/functions/api.mjs';
+import handler,{closeDatabase} from '../netlify/functions/api.mjs';
 if(!process.env.CI_TEST_DATABASE)throw Error('Only run against disposable CI Postgres.');
+process.env.TOKEN_SECRET||='disposable_ci_signing_key_only_0123456789abcdef';
 const db=getDatabase({connectionString:process.env.NETLIFY_DB_URL});
 for(const f of ['20261110030000_initial.sql','20261110040000_stress.sql'])await db.pool.query(await readFile(`netlify/database/migrations/${f}`,'utf8'));
 const before=(await db.pool.query("SELECT count(*) AS n FROM cards WHERE type='wormhole'")).rows[0].n;
@@ -43,4 +44,4 @@ const dbCards=(await db.pool.query("SELECT * FROM cards WHERE world_id=(SELECT i
 globalThis.window={Jootsy:{}};globalThis.d3=await import('d3-hierarchy');const {layout}=await import('../public/map.js');const m=layout(dbCards,dbPaths);assert.equal(m.nodes.length,457);assert.equal(dbPaths.filter(p=>p.kind==='wormhole').length,40);assert.deepEqual(m,layout(dbCards,dbPaths));
 for(const n of m.nodes)assert(Math.abs(Math.hypot(n.x,n.y)-(240+170*n.depth)*m.factor)<.00001);
 for(let i=0;i<m.nodes.length;i++)for(let j=i+1;j<m.nodes.length;j++){const x=m.nodes[i],y=m.nodes[j],wx=x.card?.type==='scenario'?40:20,wy=y.card?.type==='scenario'?40:20;assert(Math.abs(x.x-y.x)>=(wx+wy)/2||Math.abs(x.y-y.y)>=(wx+wy)*.7,`Overlap ${x.id} / ${y.id}`);}
-console.log('PASS v3: migration + complete v2 snapshot; all 300 legacy stress cards + 40 doors; authoritative identity/depth; named writing; dealer-only write/rename/discard; cuts on others; news; ownership; concurrent writes; 10 concurrent forks; eight-blank cap + discard; own-other-card wormholes; dead ends + undo; delete/reopen + wormhole cascade; scenario paths ignored; hidden stubs; token reset; claims removed; SQL tree invariant; deterministic radial stress layout without overlap.');await db.pool.end();
+console.log('PASS v3: migration + complete v2 snapshot; all 300 legacy stress cards + 40 doors; authoritative identity/depth; named writing; dealer-only write/rename/discard; cuts on others; news; ownership; concurrent writes; 10 concurrent forks; eight-blank cap + discard; own-other-card wormholes; dead ends + undo; delete/reopen + wormhole cascade; scenario paths ignored; hidden stubs; token reset; claims removed; SQL tree invariant; deterministic radial stress layout without overlap.');await db.pool.end();await closeDatabase();

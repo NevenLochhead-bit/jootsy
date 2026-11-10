@@ -133,10 +133,13 @@ export default async function handler(req){
     if(method==='PATCH')await c.query('UPDATE paths SET label=$2,rev=$3 WHERE id=$1',[a.id,text(b.label,60,'Card name'),rev]);
     else await c.query('UPDATE paths SET deleted=true,rev=$2 WHERE id=$1',[a.id,rev]);return {ok:true};
    }
-   if(route[0]==='settings'&&method==='PATCH'){instructor(p);for(const key of ['jootsy_min_cards'])if(b[key]!==undefined&&(!Number.isInteger(b[key])||b[key]<1||b[key]>100))fail(400,'settings','Ring and card thresholds must be whole numbers from 1 to 100.');if(b.jootsy_enabled!==undefined&&typeof b.jootsy_enabled!=='boolean')fail(400,'settings','Choose on or off.');await c.query('UPDATE worlds SET jootsy_ring=$2,jootsy_min_cards=$3,end_ring=$4,jootsy_enabled=$5 WHERE id=$1',[w.id,b.jootsy_ring??w.jootsy_ring,b.jootsy_min_cards??w.jootsy_min_cards,b.end_ring??w.end_ring,b.jootsy_enabled??w.jootsy_enabled]);return {ok:true};}
+   if(route[0]==='settings'&&method==='PATCH'){instructor(p);for(const key of ['jootsy_min_cards'])if(b[key]!==undefined&&(!Number.isInteger(b[key])||b[key]<1||b[key]>100))fail(400,'settings','The card threshold must be a whole number from 1 to 100.');if(b.jootsy_enabled!==undefined&&typeof b.jootsy_enabled!=='boolean')fail(400,'settings','Choose on or off.');await c.query('UPDATE worlds SET jootsy_ring=$2,jootsy_min_cards=$3,end_ring=$4,jootsy_enabled=$5 WHERE id=$1',[w.id,w.jootsy_ring,b.jootsy_min_cards??w.jootsy_min_cards,w.end_ring,b.jootsy_enabled??w.jootsy_enabled]);return {ok:true};}
    if(route[0]==='players'&&route[2]==='reset-passcode'&&method==='POST'){instructor(p);const target=(await c.query('SELECT * FROM players WHERE id=$1 AND world_id=$2',[requireId(route[1]),w.id])).rows[0];if(!target)fail(404,'player','This player does not exist.');if(target.is_instructor)fail(400,'instructor','Change the instructor passcode through the environment settings.');const passcode=randomBytes(6).toString('base64url');await c.query('UPDATE players SET pass_hash=$2,token_version=token_version+1,rev=$3 WHERE id=$1',[target.id,await hash(passcode),rev]);return {passcode};}
    fail(404,'route','This action does not exist.');
   }));
  }catch(e){if(e instanceof Fault)return json({error:e.error,message:e.message,...e.extra},e.status);if(e instanceof SyntaxError)return json({error:'invalid',message:'Please check the form and try again.'},400);console.error('Jootsy API error',e);return json({error:'server',message:'The table could not be reached. Your writing is still here; try again.'},500);}
 }
 export const config={path:['/api/w/*','/media/*']};
+
+// Close the SDK pool when the disposable integration runner finishes.
+export async function closeDatabase(){if(database){await database.pool.end();database=undefined;}}
