@@ -2,17 +2,17 @@
 
 ## Current focus
 
-- **State (Tue Nov 10, 09:40 ET):** **v4 core is live** (`main` runtime `19fdf3b`, published 09:13). Review 3 below: no blocking defect in the server code. Neven is playing it in the sandbox now.
-- **Deploy budget for v4 is 8, not 4** (raised at 08:40, commit `d86d67b`; the Engineer's report had not seen it). **4 used, 4 left.** Tier 2 needs no further budget decision, only Neven's go.
-- **Next to act: Neven.** Play the sandbox; listen for the commit sound; go / no-go by 11:00 ET. Defects straight to the Engineer through Bolus; design changes to me.
-- **Next to act: Engineer.** Hold. Fix only what Neven reports as broken, batched. Start Tier 2 (§16.7) on his go. Last deploy 11:45; nothing after 12:00.
-- **No-go path:** republish the v3 deploy and run the cleanup SQL in `V4-REPORT.md`. Prepared, not executed.
+- **State (Tue Nov 10, 09:55 ET):** v4 core is live (`19fdf3b`) and Neven is refining it, which I am reading as a working **go on v4**; I have asked him to confirm in a word. **Spec v4.1** is issued: `docs/JOOTSY_TUESDAY_SPEC.md` §17, branch `architect`.
+- **Next to act: Engineer.** §17 in order: A (words, order, removals), B (join screen), then C (sound on cards), then D (light on the wires, Refresh scan). Deploy A+B together as soon as they pass §17.E. **4 deploys left; last deploy 11:45 ET; nothing after 12:00.**
+- **Lanes:** Neven's graphic design notes go to the Engineer directly. Defects go to the Engineer directly. Anything that changes what a player can do or read comes through me.
+- **Next to act: Neven.** Keep playing; confirm go; listen for the commit sound; try a phone.
+- **No-go path** (unchanged): republish v3 and run the cleanup SQL in `V4-REPORT.md`.
 
 ## Where things are
 
 | What | Where |
 |---|---|
-| The spec (v4; §16 is the change to build) | `docs/JOOTSY_TUESDAY_SPEC.md` on branch `architect` |
+| The spec (v4.1; §17 is the change to build) | `docs/JOOTSY_TUESDAY_SPEC.md` on branch `architect` |
 | Build plan for Neven (v2; out of date since v3) | `docs/JOOTSY_BUILD_PLAN.md` on branch `architect` |
 | These notes | `ARCHITECT-NOTES.md` on branch `architect` |
 | Engineer's reports | `FINAL-REPORT.md`, `ENGINEER-REPORT.md`, `SLICE-B-REPORT.md` on `main` |
@@ -52,6 +52,10 @@ Decided (newest last; a later row overrides an earlier one):
 | Nov 10, 08:07 | **Removed:** Dead End ("a card that goes nowhere is a dead end"; the game always has a back button); the Face-down toggle; the blank Jootsy! card on the table. |
 | Nov 10, 08:07 | **Jootsy! today.** "Their goal is five cards minimum, and one Jootsy." The Jootsy! picker lists all cards played; students find the name on the Board first. Wormhole picker lists their own cards. A Jootsy! card "sparkles continuously". |
 | Nov 10, 08:07 | **Board feel.** Players panel on the left with a cards-played column; a name lights up when that player commits. Committed cards illuminate briefly with "a pleasing sound". Scenarios are circles. Wormholes and Jootsies stay dotted. A Refresh button that scans and says "Board is synced!". Energy flowing along the lines, "but I also don't want this to overwhelm the system". Arrowheads must sit on their lines. Desktop first; horizontal scroll on mobile. |
+| Nov 10, 09:40 | **After playing v4 — words.** "Name" becomes "Choice", with a "Choices" section under the previous card listing it. "Fragment" becomes "Narrative Fragment". The Jootsy! confirm reads "Jootsy it!". "Find me" becomes "My Latest". Order: Destiny, Fork, Dream, Wormhole, Jootsy. |
+| Nov 10, 09:40 | **After playing v4 — behaviour.** No transition options at all on the third stage. Commit possible after one stage, green when available. Each card: Add image and Add sound; no Paste a link. Add Scenario button beside Refresh. Remove the Jootsy! card at the centre of the Board. Players panel collapsible. Refresh runs a scan. Reasonable upload limits. |
+| Nov 10, 09:40 | **Wires.** Arrowheads go; "an animation on each wire that shows a swelled bit of light passing through the wire." |
+| Nov 10, 09:40 | **Login** must be "clear, easy, accessible"; students must be able to get back to their previous sessions. Graphic design notes go from him to the Engineer directly. |
 
 For him to veto (my calls inside his rules; they stand unless he objects):
 
@@ -60,6 +64,10 @@ For him to veto (my calls inside his rules; they stand unless he objects):
 3. **A Fork needs both cards written to commit.** To commit one, Change it to a Destiny. Otherwise the Board fills with one-legged forks.
 4. **Jootsy! still unlocks at five cards**, as he decided last night; instructors are exempt so he can demo it. A Jootsy! and a Wormhole can only leave a card you wrote.
 5. **Transitions on committed cards cannot be changed today.** Change works inside a session only.
+6. **Add Scenario is instructor-only**, following "only me for scenarios".
+7. **Sound limit: MP3 or M4A up to 2 MB**, one image and one sound per card, 60 uploads per player.
+8. **No video on cards today.** Removing "Paste a link" removes the only way a card could carry video (YouTube or Vimeo). Video upload is too heavy for this pipeline this morning. If he wants video links back, it is one line to restore.
+9. **The join screen asks "I'm new" or "I've played before"**, so a misspelt name on Thursday cannot quietly create a second, empty player.
 
 Open, none needed before class:
 
@@ -158,6 +166,8 @@ None open.
 ## Handoff log
 
 Newest first. Each entry: commit or file, what is ready, who acts next. (Entries I logged earlier tonight carried times about an hour fast; the times below are from the commits.)
+
+- **Nov 10, 09:55 ET — Architect.** `docs/JOOTSY_TUESDAY_SPEC.md` → **v4.1**: new §17 from the Designer's notes after playing v4. A words/order/removals; B join screen (`mode` on `/join`, never auto-create when returning); C image + sound (`cards.audio_url`, limits, Range support); D light on the wires replacing arrowheads, Refresh scan; acceptance §17.E. No game rule changes. **Next: Engineer** — A+B first.
 
 - **Nov 10, 09:40 ET — Architect.** `ARCHITECT-NOTES.md` § "Review 3": v4 core at `19fdf3b` reviewed from code and report; no blocking defect; F11, F12 logged as known limitations. Deploy budget restated: 8 total, 4 left. **Next: Neven** (sandbox play, go / no-go by 11:00). **Engineer:** hold; fix reported defects in batches; Tier 2 on his go.
 

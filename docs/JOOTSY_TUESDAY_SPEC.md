@@ -1,6 +1,6 @@
-# Jootsy! — Tuesday Spec (for Codex) — v4
+# Jootsy! — Tuesday Spec (for Codex) — v4.1
 
-> **v4 (Tue Nov 10, 08:30 ET): read §16 first.** §16 is the Designer's feedback after playing v3: a three-stage editing session with Commit, Board and Cards as the two views, Jootsy! today, Dead End and blank cards on the board removed. §16 overrides §15 and everything before it wherever they differ. §15 (v3) is what is deployed at `cd96e44`.
+> **v4.1 (Tue Nov 10, 09:55 ET): §17 is the change to build now.** It is the Designer's notes after playing the v4 core (live at `19fdf3b`): wording, the join screen, sound on cards, light on the wires instead of arrowheads, and a list of removals. §17 overrides §16 wherever they differ. §16 is what is deployed.
 
 *From the architect. Sections 1–14 are v2, as built and deployed at `2c16471`; **§15 (v3) is the change to build now.** Self-contained: you do not need the brief to build this. Deadline: deployed and tested before **Tuesday Nov 10, 2026, 10:00 am ET**. Class is at 12:30 pm with 33 first-year students, many on phones.*
 
@@ -516,3 +516,70 @@ In this order; stop wherever time runs out.
 - **11:00 — go / no-go, his call.** No-go: republish the v3 deploy for `cd96e44` (code only; the schema change is additive), then delete draft rows and `jootsy` paths so v3 never meets them. Give the exact statements in your report.
 - **After go** — Tier 2, last production deploy by **11:45**. **Nothing deploys after 12:00.**
 - **Deploy budget:** at most 4 production deploys for all of v4. No QA writing in `mdst1050`.
+
+## 17. Change v4.1 — the Designer's notes after playing v4
+
+Source: Neven, Nov 10, 09:40 ET. No rule of the game changes. Build in the order A, B, C, D; one production deploy for A+B if B passes, otherwise A alone and B with C. **Last deploy 11:45 ET; nothing after 12:00.** Four deploys remain in the v4 budget of eight.
+
+Neven will also bring **graphic design notes directly to you**. Take them directly when they change only how something looks. Anything that changes what a player can do, or a word a player reads, comes through this spec.
+
+### 17.A Words, order and removals (first)
+
+1. The field **"Name" is now "Choice"**, everywhere a player sees it (editor, Cards edit, validation messages: "Give this card a choice.").
+2. The field **"Fragment" is now "Narrative Fragment"**.
+3. **"Choices" section.** At the bottom of every card that has cards leaving it, in the editor and in the Board reader, a section headed **Choices** lists them as buttons. In the editor this is where the live text of the next card's Choice appears as it is typed (§16.5).
+4. **Transition order, everywhere:** Destiny · Fork · Dream · Wormhole · Jootsy!
+5. **Stage three shows no transitions at all.** No "What happens next?" heading, no dimmed buttons, no message. (This replaces the dimmed buttons and the "Commit to the board, then keep going" hover of §16.5. The server rule S4 and its `409` stay.)
+6. **Commit to the board** is available as soon as the session has one written card or one link and no blank cell, including after a single stage. **When available the button is green and lit; when not, it is dull**, with the reason on hover.
+7. In the Jootsy! picker the confirming button reads **"Jootsy it!"**
+8. **Remove the wordmark card at the centre of the Board.** The centre is empty.
+9. **"Find me" is now "My Latest"**: it centres the Board on the last card the player committed and selects it. With no cards yet it is dimmed: "Play a card first."
+10. **Add Scenario** button beside Refresh, **instructor only**. It opens the existing new-scenario form (name, opening text). Students never see it.
+11. **The Players panel collapses** to a narrow tab and reopens; its state is remembered on the device.
+12. **Remove "Paste a link"** from the editor. Cards that already hold a link keep showing it.
+
+### 17.B Joining and coming back (with A)
+
+*"We need to ensure that student login is clear, easy, accessible, and not going to create all kinds of issues. They need to be able to access their previous sessions."* The mechanism (a name and a passcode they choose) stays. The screen changes so a typo cannot quietly create a second, empty player.
+
+1. Two clear choices on the join screen: **"I'm new"** and **"I've played before"**.
+   - *I'm new:* Name, Passcode, **Start**. If the name is taken: "That name is taken. Add an initial, or choose 'I've played before'."
+   - *I've played before:* Name, Passcode, **Continue**. If no such name exists: "No player called '{name}' in this game. Check the spelling, or choose 'I'm new'." **This mode never creates a player.** Wrong passcode: "That passcode doesn't match. Ask your instructor to reset it."
+   - The server takes a `mode` (`new` or `returning`) on `POST /join` and enforces both refusals.
+2. Passcode help under the field: "At least 4 characters. Something you'll remember. You'll need it on Thursday." A **show** toggle on the passcode.
+3. Names: trimmed, inner spaces collapsed, matched without regard to case (as now).
+4. A device stays signed in (as now). **"Signed in as {name}"** is visible in the header at all times, with **Not you?** to sign out.
+5. On return with an open session: a banner, "You have an unfinished session. **Resume**", on the Board and in Cards.
+6. Accessibility: real `<label>`s, visible focus, Enter submits, errors announced (`aria-live`) and placed beside the field, `autocomplete="username"` and `new-password` / `current-password` so a password manager can save it, contrast at least 4.5:1, every control reachable by keyboard.
+7. `jootsy.netlify.app/` (no world) goes to the class world `mdst1050`.
+8. Instructor reset (existing) stays; after a reset show Neven the new passcode once, in large type, with **Copy**.
+
+### 17.C Image and sound on a card (after A and B pass)
+
+1. The editor's media row is **Add image · Add sound**. A card may have one of each.
+2. New nullable column `cards.audio_url`. `POST /plays` and `PATCH /cards/:id` accept `audio_url`; `/state` returns it. Hidden cards mask it.
+3. **Limits.** Image: as now, downscaled in the browser to 1600 px JPEG; reject over 1.5 MB after downscale. Sound: **MP3 or M4A, up to 2 MB** (about a minute); reject anything else with "Use an MP3 or M4A under 2 MB." Check type by content, not by file name. Per player: at most 60 uploads per world. Messages say the limit and what to do.
+4. Storage as images are now. Served with the right `content-type`, `immutable` caching, and **HTTP Range support (206)**: Safari will not play audio without it.
+5. Playback: a small play / pause control on the card in the editor, the Board reader and Cards. Never autoplay.
+6. Acceptance: upload and play an MP3 and an M4A in Chrome and Safari; a 3 MB file and a WAV are refused with the message; the sound survives Commit and reload; a second player hears it.
+7. If C is not solid by 11:30, ship without **Add sound** and say so. Do not ship a sound control that fails in Safari.
+
+### 17.D Light on the wires (replaces §16.7 items 1 and 2), and the Refresh scan
+
+*"Sometimes the arrows are coming off the wires, so I think it is more useful to just have an animation on each wire that shows a swelled bit of light passing through the wire."*
+
+1. **Remove arrowheads entirely.** Direction is shown by movement.
+2. Each connection carries **one soft swell of light** travelling from the earlier card to the later one, in the connection's colour, slowly (about 3–4 s per crossing, staggered so they do not pulse in unison). Dotted wormhole and Jootsy! links carry it too.
+3. **Low drain, as in §16.7:** no per-frame layout, capped at 30 fps, paused when the tab is hidden, static under `prefers-reduced-motion`, and limited to connections on screen when there are more than 300. On the `stress` world the Board must still pan smoothly; if it does not, halve the number of animated connections until it does, and report the number.
+4. **Refresh:** runs a sync, sweeps one scan line across the Board (under a second), then says **"Board is synced!"**
+
+### 17.E Acceptance for A and B
+
+1. No player-facing "Name" or bare "Fragment" remains; "Choice", "Narrative Fragment" and a "Choices" section are present in the editor, the reader and Cards.
+2. Transition order is Destiny, Fork, Dream, Wormhole, Jootsy! in every place it appears.
+3. A stage-three card shows no transition controls of any kind.
+4. Commit is dull with a blank cell, green after one written card, and commits a one-stage session.
+5. No wordmark at the centre of the Board; "My Latest" centres the last committed card; Players panel collapses and remembers; "Add Scenario" visible to the instructor only; no "Paste a link".
+6. "I've played before" with a misspelt name creates nobody and says so; "I'm new" with a taken name is refused; a returning player on a second device finds their cards and their open session.
+7. The join screen is fully usable by keyboard alone, and a screen reader announces each error.
+8. §16.8 items 1–14 still pass.
