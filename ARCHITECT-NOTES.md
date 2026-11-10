@@ -2,10 +2,10 @@
 
 ## Current focus
 
-- **State (Mon Nov 9, 22:20 ET):** v2 spec issued. Engineer is building Slice A. Nothing deployed or reviewed yet.
+- **State (Mon Nov 9, 22:25 ET):** v2 spec issued. Engineer is building Slice A. Nothing deployed or reviewed yet.
 - **Next to act: Engineer.** Push Slice A, with a report (spec §14) in the repo: deployed URL, database and storage used, checklist items passing and failing, decisions made where the spec was silent.
 - **Then: Architect.** I play the deployed build as three students (spec §12, items 1–12, 15, 16) and reply here with pass/fail and fixes.
-- **Decisions needed from Neven as Designer:** none blocking. See "Designer" below for one default awaiting confirmation.
+- **Decisions needed from Neven as Designer:** none. All Designer items to date are confirmed.
 - **Class:** Tue Nov 10, 12:30 pm ET. Slices A + B are the class-ready game. Fallback is last year's Miro board; I will say so here, in this block, the moment it looks necessary.
 
 ## Where things are
@@ -37,10 +37,9 @@ Decided:
 | Nov 9 | A Jootsy! card means jumping into another's timeline; the design must hold that distinction. Integrated as: only a Jootsy! lets you into a face-up card someone else wrote (spec §13). |
 | Nov 9 | Scenarios are created by Neven only. He creates new ones himself. |
 | Nov 9 | Deploy path is GitHub → Netlify. |
+| Nov 9 | **Thresholds confirmed.** Asked by Bolus: "Jootsy unlocks at ring 7 after seven cards have been played, and the game ends at ring 11. Are you happy with that default?" Answer: "yes." In the spec: `jootsy_ring=7`, `jootsy_min_cards=7`, `end_ring=11`. Still adjustable in settings. |
 
-Default standing until he says otherwise:
-
-- **Thresholds.** Jootsy! Perimeter at ring 7 with 7 cards played; End of Game at ring 11. Adjustable in settings; needed for Thursday, drawn on the Map on Tuesday.
+Architect's note on that confirmation: the question said the game "ends" at ring 11. In the spec the End of Game Perimeter is an open boundary, as in the brief: it is drawn and labelled, and cards may still be played beyond it. Nothing stops at ring 11. If Neven wants a hard stop, that is a new Designer item; I am not treating his "yes" as asking for one.
 
 ## Architect decisions (mine; not for Designer unless he objects)
 
@@ -59,5 +58,7 @@ Default standing until he says otherwise:
 ## Handoff log
 
 Newest first. Each entry: commit or file, what is ready, who acts next.
+
+- **Nov 9, 22:25 ET — Architect.** `ARCHITECT-NOTES.md`: Designer confirmation of thresholds recorded (relayed by Bolus). No spec change; the values were already the spec's defaults. **Next: Engineer** (Slice A + report), unchanged.
 
 - **Nov 9, 22:20 ET — Architect.** Branch `architect`, first commit: `docs/JOOTSY_TUESDAY_SPEC.md` (v2, identical to the kickoff copy), `docs/JOOTSY_BUILD_PLAN.md`, these notes. Nothing to review. **Next: Engineer** (Slice A + report).
