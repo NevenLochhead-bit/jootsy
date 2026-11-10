@@ -564,6 +564,17 @@ Neven will also bring **graphic design notes directly to you**. Take them direct
 6. Acceptance: upload and play an MP3 and an M4A in Chrome and Safari; a 3 MB file and a WAV are refused with the message; the sound survives Commit and reload; a second player hears it.
 7. If C is not solid by 11:30, ship without **Add sound** and say so. Do not ship a sound control that fails in Safari.
 
+### 17.C2 A short video on a card — after sound passes, same gate
+
+Designer (Neven, Nov 10, 10:22): *"a short 5 second video on their card… would be really nice."* It reuses the sound pipeline (upload, storage, Range), so build it only once §17.C's sound acceptance has passed.
+
+1. The media row becomes **Add image · Add sound · Add video**. A card may have an image **or** a video, plus a sound.
+2. New nullable column `cards.video_url`, handled exactly like `audio_url` (plays, edit, state, hidden masking).
+3. **Limits: MP4 only, up to 4 MB.** Check by content (an `ftyp` box), not file name. Refusal message, verbatim: "Use an MP4 under 4 MB. About 5 seconds, exported at 720p, fits easily." Counts toward the 60 uploads per player.
+4. Playback: `<video>` with `controls`, `playsinline`, `muted` by default, `loop`, `preload="metadata"`. Never autoplay on the Board; in the Board reader and the editor it starts on click.
+5. Acceptance: a 5-second 720p H.264 MP4 uploads and plays in Chrome and Safari, survives Commit and reload, and a second player sees it; a 6 MB file and a `.mov` are refused with the message.
+6. **Same gate as sound: if it is not solid in both browsers by 11:30, it does not ship today.** Sound must not be delayed for it.
+
 ### 17.D Light on the wires (replaces §16.7 items 1 and 2), and the Refresh scan
 
 *"Sometimes the arrows are coming off the wires, so I think it is more useful to just have an animation on each wire that shows a swelled bit of light passing through the wire."*

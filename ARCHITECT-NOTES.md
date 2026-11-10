@@ -3,7 +3,7 @@
 ## Current focus
 
 - **State (Tue Nov 10, 10:15 ET):** **v4.1 A+B is live** (`main` runtime `f2e317e`, published 10:01; deploy 5 of 8). Words, order, removals and the new join screen are in. I have reviewed the join code: correct. Class runs on v4 (Designer GO, 09:42).
-- **Next to act: Engineer.** §17.C (image + sound; Safari playback is the gate, drop sound if not solid by 11:30), then §17.D (light on the wires, Refresh scan). **3 deploys left; last deploy 11:45 ET; nothing after 12:00.**
+- **Next to act: Engineer.** §17.C (image + sound; Safari playback is the gate, drop sound if not solid by 11:30), then **§17.C2 (short video, new at 10:25, only after sound passes)**, then §17.D (light on the wires, Refresh scan). **3 deploys left; last deploy 11:45 ET; nothing after 12:00.**
 - **Next to act: Neven.** Reload and check the new wording and join screen in the sandbox; try a phone. Graphic design notes go to the Engineer directly.
 - **Student manual:** written to the v4.1 wording on his Notion page "Jootsy!" (Deck Cards). It mentions sound; cut that line if §17.C ships without sound.
 - **Emergency fallback only:** republish v3 and run the cleanup SQL in `V4-REPORT.md`.
@@ -57,6 +57,7 @@ Decided (newest last; a later row overrides an earlier one):
 | Nov 10, 09:40 | **Wires.** Arrowheads go; "an animation on each wire that shows a swelled bit of light passing through the wire." |
 | Nov 10, 09:40 | **Login** must be "clear, easy, accessible"; students must be able to get back to their previous sessions. Graphic design notes go from him to the Engineer directly. |
 | Nov 10, 09:42 | **GO on v4.** "go! yes i hear it - perfect." The commit sound is right. |
+| Nov 10, 10:22 | **Short video on a card** "would be really nice." Issued as §17.C2: MP4 up to 4 MB, built after sound, same 11:30 gate. |
 
 For him to veto (my calls inside his rules; they stand unless he objects):
 
@@ -67,7 +68,7 @@ For him to veto (my calls inside his rules; they stand unless he objects):
 5. **Transitions on committed cards cannot be changed today.** Change works inside a session only.
 6. **Add Scenario is instructor-only**, following "only me for scenarios".
 7. **Sound limit: MP3 or M4A up to 2 MB**, one image and one sound per card, 60 uploads per player.
-8. **No video on cards today.** Removing "Paste a link" removes the only way a card could carry video (YouTube or Vimeo). Video upload is too heavy for this pipeline this morning. If he wants video links back, it is one line to restore.
+8. **Video is MP4 up to 4 MB only** (§17.C2). Clips exported small will fit; clips straight off a phone usually will not, and iPhone `.mov` files are refused. Larger video needs a different upload route, not before Thursday.
 9. **The join screen asks "I'm new" or "I've played before"**, so a misspelt name on Thursday cannot quietly create a second, empty player.
 
 Open, none needed before class:
@@ -177,6 +178,8 @@ None open.
 ## Handoff log
 
 Newest first. Each entry: commit or file, what is ready, who acts next. (Entries I logged earlier tonight carried times about an hour fast; the times below are from the commits.)
+
+- **Nov 10, 10:25 ET — Architect.** `docs/JOOTSY_TUESDAY_SPEC.md` v4.1: added **§17.C2** short video on a card (MP4 ≤ 4 MB, `cards.video_url`, after sound, same 11:30 gate). **Next: Engineer** — C, then C2, then D.
 
 - **Nov 10, 10:15 ET — Architect.** `ARCHITECT-NOTES.md` § "Review 4": v4.1 A+B at `f2e317e` reviewed (join route); no findings. Student manual written to Neven's Notion page "Jootsy!". **Next: Engineer** — §17.C, then §17.D; 3 deploys left.
 
