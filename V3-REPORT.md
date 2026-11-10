@@ -1,13 +1,13 @@
 # Jootsy v3 engineering report
 
-Status: v3 is deployed and core acceptance passes. Code `ee9b428` / PR #1. Final player-filter accessibility correction is being verified for production deploy 2 of the maximum 3; no model or migration changes in that correction.
+Status: **v3 deployed and verified** at code `cd96e44dc3beb619aaf3d061356d62dacf846151`, PR #2. Exactly two v3 production deploys, within the maximum three. The second fixes only the selected player filter’s accessible state; it changes no game rule or migration. Next: Architect reviews §15.9 in the sandbox.
 
 Spec: `architect` at `d94e022`, docs/JOOTSY_TUESDAY_SPEC.md §15. Class URL: https://jootsy.netlify.app/mdst1050 ; QA only: https://jootsy.netlify.app/sandbox . Same managed Netlify Postgres and Netlify Blobs image storage. No retention click required. Instructor passcode unchanged and delivered privately, never in this public repo.
 
 ## Review 1
 
 - F1 yes: independent random 32-byte signing secret configured, Functions scope. Code now refuses a missing/short signing key; no passcode fallback.
-- F7: 15 v2 production attempts, 14 completed / 1 failed installation. Branch builds were off; previews have now been disabled. All transport and report-only commits use `[skip netlify]`; expanded source is tested with disposable PostgreSQL before its bot commit. Runtime-only ignore rule is a second guard. One v3 production deploy published, with one final accessibility correction queued. Expected total: two of the maximum three. No branch or preview deploy was created.
+- F7: 15 v2 production attempts, 14 completed / 1 failed installation. Branch builds were off; previews have now been disabled. All transport and report-only commits use `[skip netlify]`; expanded source is tested with disposable PostgreSQL before its bot commit. Runtime-only ignore rule is a second guard. Two v3 production deploys published, including the final accessibility correction. Total: two of the maximum three. No branch or preview deploy was created.
 - F3: hashes prepared before the join world lock; verification remains inside to avoid a reset/login race.
 - F5: duplicate-name error now tells newcomers to choose another name.
 - F6: main ARCHITECT-NOTES.md is a pointer only; Architect's branch is authoritative. ENGINEER-HANDOFF.md holds engineering updates.
@@ -45,7 +45,7 @@ If v3 cannot pass by 09:00 ET, restore the native v2 backup via the Restore butt
 | 10: author permissions | PASS live API 403 and absent foreign edit/delete controls. |
 | 11: incoming colours / arrows | PASS: Dream card frame `--suit:var(--dream)`, yellow Map card, outward coloured arrows. No permanent connection words; tapping a connection revealed Fork. |
 | 12: no rings / depth / overlap | PASS: Map has no ring drawing/labels. Disposable stress check confirms radius from depth, deterministic geometry and no node overlap. Fit works at desktop and 360px. |
-| 13: Players | PASS: names sorted by played count, Bob at 5; author tap selects his timeline; second tap clears. Final correction makes selected state readable as true/false to assistive technology. |
+| 13: Players | PASS: names sorted by played count, Bob at 5; author tap selects his timeline; second tap clears. Final deployed correction verified false → true → false for the player button’s ARIA state. |
 | 14: migration | PASS: all 300 legacy stress cards and 40 doors converted and remain walkable; old sandbox card “Touch the silver” retained native video, readyState 4, 960×540, 5.055s. |
 | Retained §12 12: scenario admin | PASS: scenario created without starting paths appears to student in 2.83s. |
 | Retained §12 14–16 | PASS: Map → Card → Map centres same card; returning identity and wrong passcode checked; literal script text renders as text. |
@@ -54,3 +54,7 @@ If v3 cannot pass by 09:00 ET, restore the native v2 backup via the Restore butt
 Source-expansion runs 11, 12 and 13 passed off main before PR #1 merged: syntax, supported media and identity backs, disposable PostgreSQL model/concurrency/migration/geometry and build. The live sandbox API harness also passed every v3 check after deployment. The in-app browser console had no errors; Chrome reported extension message-channel errors during the walkthrough, with no app failure observed.
 
 No QA writing was put in mdst1050. QA scenario and writing remain in sandbox. All test identities are synthetic. A physical-phone check is the only remaining hardware evidence; “Describe an image” remains intentionally omitted under §15.7.
+
+Final release smoke check: selected player state false → true → false; card view, Map and player counts render correctly; in-app browser error log empty. Source-expansion run 15 passed before the final correction merged. Retained §12 item 17 remains partial; no other acceptance failure found.
+
+![Verified v3 Map at 360px](docs/verification/v3-map.jpg)
