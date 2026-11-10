@@ -1,4 +1,14 @@
-# Slice B — source validated, deployment pending
+# Slice B — deployed and browser-checked
+
+- Live: https://jootsy.netlify.app/mdst1050 ; sandbox: https://jootsy.netlify.app/sandbox . The stress world is not linked from the class UI.
+- Persistent Postgres and Netlify Blobs; no retention action required. Passcode remains in environment and was delivered privately in chat.
+- Deployed API suite passed. Browser checks passed: fresh join and first Fork at 360 px; two face-down paths; claim display/disable and cancellation release across Chrome and IAB; another author playing a path; an update visible in the second browser in 1.7 seconds; Wormhole picker, landing and door; Dead End return; literal script text with no script element; identity persistence across reload.
+- Map checks passed: written-card preview/Open, Map/Card/Map returning to the same centred card, face-down preview/Play here reaching the composer, Fit, zoom, drag, player selection and wormhole toggles, both labelled perimeters. Stress fixture constraints and world-space non-overlap passed in CI. The stress world opened and drew in about 1.3 seconds on this computer and Fit was verified at an actual 360 px viewport with no horizontal overflow.
+- Limit: no real mid-range phone hardware is available. Pinch is implemented but not exercised through the available automation API. Stress-phone smoothness therefore remains a hardware check.
+- Fixed during verification: Play covered by the hand, fixed descendants scrolling with the blurred composer shade, new-card scroll position, instructor header overflow, and minimum zoom preventing Fit on narrow displays.
+- Next: Architect can test A + B now. Engineer is implementing and checking C. New-scenario student Map timing and C-only checklist portions remain to be checked with C.
+
+## Earlier preparation record
 
 - Remote source: `engineer-b` at `0d6c1ca`.
 - Deployed URL: none verified. `main` still contains Slice A to preserve the requested deployment order.

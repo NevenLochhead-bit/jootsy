@@ -13,16 +13,16 @@ export function layout(worldCards,worldPaths){
  return {nodes,factor};
 }
 let view=null;
-window.openMap=id=>{
- if(view){view.centre(id);return;}
+window.openMap=(id,options={})=>{
+ if(view){view.centre(id);if(options.player)view.setPlayer(options.player);return;}
  const wrap=e('div',{class:'map-screen'}),canvas=e('canvas',{'aria-label':'Story Map. Drag to pan, scroll or pinch to zoom.',tabindex:0}),ctx=canvas.getContext('2d'),controls=e('div',{class:'map-controls'}),preview=e('div',{class:'map-preview'}),status=e('div',{class:'map-status'});
- let W=0,H=0,k=.6,tx=0,ty=0,focus=id,nodes=[],factor=1,filter='',showDown=true,showWorms=true,raf=0,selection=null,old=new Map(),animation=0;
+ let W=0,H=0,k=.6,tx=0,ty=0,focus=id,nodes=[],factor=1,filter=options.player||'',showDown=true,showWorms=true,raf=0,selection=null,old=new Map(),animation=0;
  const pointers=new Map();let down=null,lastPinch=null,dragging=false;
  const close=()=>{cancelAnimationFrame(raf);resize.disconnect();wrap.remove();window.removeEventListener('keydown',key);view=null;};
  function centre(cardId){const node=nodes.find(n=>n.id===cardId);if(node){k=.85;tx=W/2-node.x*k;ty=H/2-node.y*k;focus=cardId;}else fit();draw();}
  function fit(){const max=Math.max(...nodes.map(n=>n.radius),240,(240+170*S.world.end_ring)*factor);k=Math.max(.0001,Math.min((W-60)/(2*max),(H-180)/(2*max)));tx=W/2;ty=H/2+20;draw();}
  function update(){const next=layout(cards(),[...S.paths.values()]);old=new Map(nodes.map(n=>[n.id,n]));nodes=next.nodes;factor=next.factor;animation=performance.now();if(!raf)raf=requestAnimationFrame(animate);updatePicker();}
- function updatePicker(){const selected=picker.value;picker.replaceChildren(e('option',{value:''},'All players'),...[...S.players.values()].sort((a,b)=>a.name.localeCompare(b.name)).map(p=>e('option',{value:p.id},p.name)));picker.value=selected;}
+ function updatePicker(){const selected=picker.value||filter;picker.replaceChildren(e('option',{value:''},'All players'),...[...S.players.values()].sort((a,b)=>a.name.localeCompare(b.name)).map(p=>e('option',{value:p.id},p.name)));picker.value=selected;}
  const rect=n=>n.card?.type==='scenario'?[40,56]:[20,28];
  const at=(n,t)=>{const previous=old.get(n.id);return previous?{...n,x:previous.x+(n.x-previous.x)*t,y:previous.y+(n.y-previous.y)*t}:n;};
  function paint(t=1){ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);ctx.clearRect(0,0,W,H);ctx.save();ctx.translate(tx,ty);ctx.scale(k,k);const positions=new Map(nodes.map(n=>[n.id,at(n,t)]));const maxDepth=Math.max(S.world.end_ring,...nodes.map(n=>n.depth));
@@ -49,6 +49,6 @@ window.openMap=id=>{
  canvas.addEventListener('pointerdown',ev=>{canvas.setPointerCapture(ev.pointerId);const p=point(ev);pointers.set(ev.pointerId,p);if(pointers.size===1){down={...p,tx,ty};dragging=false;}else {down=null;lastPinch=null;}});
  canvas.addEventListener('pointermove',ev=>{if(!pointers.has(ev.pointerId))return;const p=point(ev);pointers.set(ev.pointerId,p);if(pointers.size===2){const [a,b]=[...pointers.values()],distance=Math.hypot(a.x-b.x,a.y-b.y),mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};if(lastPinch){tx+=mid.x-lastPinch.x;ty+=mid.y-lastPinch.y;zoom(k*distance/lastPinch.distance,mid.x,mid.y);}lastPinch={...mid,distance};dragging=true;}else if(down){tx=down.tx+p.x-down.x;ty=down.ty+p.y-down.y;if(Math.hypot(p.x-down.x,p.y-down.y)>6)dragging=true;draw();}});
  const up=ev=>{const p=point(ev);if(!dragging&&down)choose(hit(p.x,p.y));pointers.delete(ev.pointerId);lastPinch=null;down=null;};canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',ev=>{pointers.delete(ev.pointerId);down=null;});
- function key(ev){if(ev.key==='Escape')close();}window.addEventListener('keydown',key);view={centre,close,update};
+ function key(ev){if(ev.key==='Escape')close();}window.addEventListener('keydown',key);view={centre,close,update,setPlayer:id=>{filter=id;picker.value=id;draw();}};
 };
 window.mapStateChanged=()=>view?.update();
