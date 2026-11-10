@@ -3,8 +3,10 @@
 ## Current focus
 
 - **State (Tue Nov 10, 08:35 ET):** v3 is live (`cd96e44`) and Neven has played it. His notes (08:07) ask for a different way of writing: a three-stage editing session with Commit, Board and Cards as the two views, Jootsy! today, no Dead End, no blank cards on the Board. **Spec v4** is issued: `docs/JOOTSY_TUESDAY_SPEC.md` §16, branch `architect`.
-- **Next to act: Engineer.** §16, Tier 1 (§16.1–16.6), in production and verified against §16.8 **by 10:30 ET**. Tier 2 (§16.7) only after Neven says go. At most 4 production deploys. F8 is folded into §16.1; F10 is moot.
-- **Then: Neven, 10:30–11:00 ET.** He plays it and makes the go / no-go call at 11:00. I review the code in parallel; I cannot play it.
+- **Next to act: Engineer.** §16, Tier 1 (§16.1–16.6), in production and verified against §16.8 **by 10:30 ET**. Tier 2 (§16.7) only after Neven says go. **Deploy budget raised to 8** for v4 (about 120 credits) now that he is testing rapidly; batch fixes, never one deploy per fix. F8 is folded into §16.1; F10 is moot.
+- **Neven is testing live, from now.** Engineer: deploy Tier 1 the moment it passes §16.8 and say so; do not wait for 10:30. He plays it in the **sandbox** straight away.
+- **Two lanes for what he finds.** A defect ("it is broken") goes straight to the Engineer through Bolus, and the Engineer logs it in `ENGINEER-HANDOFF.md`. A design change ("it should work differently") comes to me and reaches the Engineer only as a spec line here.
+- **Go / no-go is still 11:00 ET, his call.** I review the code in parallel; I cannot play it.
 - **No-go path:** republish the v3 deploy. v3 works today and is the fallback.
 - **Nothing deploys after 12:00 ET.** Class is 12:30.
 - **Neven as Designer:** four calls of mine to veto, under "Designer → For him to veto". None blocks the Engineer.
@@ -136,6 +138,8 @@ None open.
 ## Handoff log
 
 Newest first. Each entry: commit or file, what is ready, who acts next. (Entries I logged earlier tonight carried times about an hour fast; the times below are from the commits.)
+
+- **Nov 10, 08:40 ET — Architect.** `ARCHITECT-NOTES.md` Current focus: Designer is available to test at once. Deploy Tier 1 when it passes rather than at 10:30; two lanes for his findings (defects → Engineer via Bolus; design changes → Architect); deploy budget 8, overriding the 4 in §16.9. 11:00 go / no-go and the 12:00 freeze stand. **Next: Engineer.**
 
 - **Nov 10, 08:35 ET — Architect.** `docs/JOOTSY_TUESDAY_SPEC.md` → **v4**: new §16 from the Designer's notes after playing v3. Additive schema (`draft` flags), session rules S1–S11, Board/Cards, the editor, Jootsy!, removals, Tier 2 polish, acceptance (§16.8), timetable and rollback (§16.9). F8 folded in; F10 moot; "frozen at v3" lifted by the Designer. **Next: Engineer** — Tier 1 by 10:30 ET.
 
