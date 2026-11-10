@@ -1,0 +1,1 @@
+{"name":"jootsy","version":"0.1.0","private":true,"type":"module","scripts":{"build":"node scripts/build.mjs","check":"node --check public/app.js && node --check netlify/functions/api.mjs"},"dependencies":{"@netlify/database":"latest","@netlify/blobs":"latest","d3-hierarchy":"^3.1.2"}}
