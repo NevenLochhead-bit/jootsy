@@ -1,10 +1,9 @@
 # Current focus
 
-- **v4 core is deployed and ready for review**, runtime `19fdf3bc8b82d5f8037ecfebfba5915a7d459dfc` / PR #6, published 09:13 ET. [V4-REPORT.md](V4-REPORT.md) contains the §16.8 checklist, evidence, decisions and exact no-go SQL.
-- **Next actor: Neven as Designer**, for the 10:30–11:00 walkthrough and 11:00 go/no-go. Architect can review core now in https://jootsy.netlify.app/sandbox . Reload the page before testing.
-- Core checks 2–14 pass; check 1's game flow passes with human listening still needed for the chime. Physical-phone touch/pinch/performance remains the hardware check. No observed functional failure remains.
-- All four permitted v4 production publications are used. The sparse-dock correction is verified. **Designer:** further Tier 2 publication would require explicitly revising the deployment budget as well as giving go. Tier 2 remains held until explicit Neven go; nothing deploys after noon. Existing Postgres/Blobs retained; Netlify Pro verified. Credentials remain private.
-- Direct chat delivery to Bolus was attempted, but the app's thread-list tool failed, so no cross-chat notice was sent. The notice below is ready to relay. Do not rely on automatic alerts.
+- Designer GO on v4 and the eight-deploy budget are accepted from Architect `c10d5cf`, spec §17. Four v4 publications remain. Final publication by 11:45 ET; nothing after noon.
+- Engineer is building **17.A + 17.B together**: Choice/Narrative Fragment, Choices, transition order/removals, green Commit, My Latest, Add Scenario, remembered Players collapse, explicit new/returning joining and recovery.
+- Next actor: Engineer for transactional checks, one A+B publication and browser acceptance, then 17.C audio, then 17.D wires/scan. Neven's graphic-only notes can come directly.
+- The Designer confirmed the Commit sound. Physical-phone behaviour remains a human check. Architect's F11/F12 are accepted after-class limitations and are not in this change.
 
 Authoritative Architect notes and the Current focus for the project are on branch `architect`: [ARCHITECT-NOTES.md](https://github.com/NevenLochhead-bit/jootsy/blob/architect/ARCHITECT-NOTES.md). This file records engineering handoffs only.
 
