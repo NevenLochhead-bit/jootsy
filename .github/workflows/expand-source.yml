@@ -1,27 +1,48 @@
 name: Expand source bundle
 on:
   push:
-    branches: [main]
+    branches: [main, engineer-v3]
     paths: [source.tar.gz, .github/workflows/expand-source.yml]
   workflow_dispatch:
 permissions:
   contents: write
 concurrency:
-  group: source-expansion
+  group: source-expansion-${{ github.ref }}
   cancel-in-progress: false
 jobs:
   expand:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: jootsy_test
+          POSTGRES_PASSWORD: disposable_ci_only
+          POSTGRES_DB: jootsy_test
+        ports: ['5432:5432']
+        options: --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      NETLIFY_DB_URL: postgres://jootsy_test:disposable_ci_only@localhost:5432/jootsy_test
+      CI_TEST_DATABASE: 'true'
+      INSTRUCTOR_PASSCODE: disposable_ci_only
+      TOKEN_SECRET: disposable_ci_signing_key_only_0123456789abcdef
     steps:
       - uses: actions/checkout@v4
       - name: Expand reviewed local source
         run: tar -xzf source.tar.gz --exclude="._*"
-      - name: Commit expanded source
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --package-lock=false
+      - run: npm run check
+      - run: node scripts/api-checks.mjs
+      - run: npm run build
+      - name: Commit verified source
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .
           if ! git diff --cached --quiet; then
-            git commit -m "Expand Jootsy source bundle"
+            git commit -m "Expand verified Jootsy source bundle"
             git push
           fi
