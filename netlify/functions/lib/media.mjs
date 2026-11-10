@@ -1,5 +1,7 @@
 // Content inspection: WHATWG MIME sniffing and ISO-BMFF boxes, never a filename/MIME claim.
 export const SOUND_ERROR='Use an MP3 or M4A under 2 MB.';
+export const VIDEO_ERROR='Use an MP4 under 4 MB. About 5 seconds, exported at 720p, fits easily.';
+export const VIDEO_LIMIT=4_000_000;
 export const IMAGE_LIMIT=1_500_000,SOUND_LIMIT=2_000_000;
 const ascii=(b,a,n)=>b.subarray(a,a+n).toString('ascii');
 function boxes(b,start=0,end=b.length){const out=[];for(let p=start;p+8<=end;){let size=b.readUInt32BE(p),head=8;if(size===1){if(p+16>end)return [];const n=b.readBigUInt64BE(p+8);if(n>BigInt(Number.MAX_SAFE_INTEGER))return [];size=Number(n);head=16;}if(size===0)size=end-p;if(size<head||p+size>end)return [];out.push({type:ascii(b,p+4,4),body:p+head,end:p+size});p+=size;}return out;}
@@ -9,6 +11,10 @@ export function soundType(input){const b=Buffer.from(input);if(!b.length||b.leng
  const top=boxes(b),ftyp=top.find(x=>x.type==='ftyp'),moov=top.find(x=>x.type==='moov');if(!ftyp||!moov||!top.some(x=>x.type==='mdat'&&x.end>x.body)||!['M4A ','isom','iso2','mp41','mp42'].includes(ascii(b,ftyp.body,4)))return null;
  let audio=false;for(const trak of boxes(b,moov.body,moov.end).filter(x=>x.type==='trak')){const mdia=boxes(b,trak.body,trak.end).find(x=>x.type==='mdia');if(!mdia)continue;const media=boxes(b,mdia.body,mdia.end),handler=media.find(x=>x.type==='hdlr');if(!handler||handler.body+12>handler.end)continue;const type=ascii(b,handler.body+8,4);if(type==='vide')return null;if(type!=='soun')continue;const minf=media.find(x=>x.type==='minf'),stbl=minf&&boxes(b,minf.body,minf.end).find(x=>x.type==='stbl'),stsd=stbl&&boxes(b,stbl.body,stbl.end).find(x=>x.type==='stsd');if(stsd&&boxes(b,stsd.body+8,stsd.end).some(x=>['mp4a','alac'].includes(x.type)))audio=true;}
  return audio?{extension:'m4a',contentType:'audio/mp4'}:null;
+}
+export function videoType(input){const b=Buffer.from(input);if(!b.length||b.length>VIDEO_LIMIT)return null;const top=boxes(b),ftyp=top.find(x=>x.type==='ftyp'),moov=top.find(x=>x.type==='moov');if(!ftyp||ftyp.body+8>ftyp.end||!['isom','iso2','avc1','mp41','mp42'].includes(ascii(b,ftyp.body,4))||!moov||!top.some(x=>x.type==='mdat'&&x.end>x.body))return null;
+ // A real video track is required; QuickTime ('qt  ') and audio-only MP4 are not card videos.
+ for(const trak of boxes(b,moov.body,moov.end).filter(x=>x.type==='trak')){const mdia=boxes(b,trak.body,trak.end).find(x=>x.type==='mdia');if(!mdia)continue;const media=boxes(b,mdia.body,mdia.end),handler=media.find(x=>x.type==='hdlr');if(handler&&handler.body+12<=handler.end&&ascii(b,handler.body+8,4)==='vide')return {extension:'mp4',contentType:'video/mp4'};}return null;
 }
 // RFC 9110, byte ranges. A single range is enough for Safari's probes and seeks.
 export function mediaResponse(req,input,contentType){const bytes=new Uint8Array(input),length=bytes.byteLength,headers={'content-type':contentType,'cache-control':'public,max-age=31536000,immutable','x-content-type-options':'nosniff','accept-ranges':'bytes'};const range=req.method==='GET'?req.headers.get('range'):null;let start=0,end=length-1,status=200;
