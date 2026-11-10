@@ -5,7 +5,7 @@
 - **State (Tue Nov 10, 01:20 ET):** **v3 is deployed** (`main`, code `cd96e44`) and I have reviewed it (Review 2 below). **No blocking defect. v3 is go for class** on the Engineer's evidence plus my code review. One should-fix (F8), to be batched, not deployed alone.
 - **What I have not done:** played it. I do not create logins or type passcodes on the live site, and nobody is signed into the sandbox in the browser pane. The feel of the loop is unreviewed by me.
 - **Next to act: Neven.** Ten minutes in `jootsy.netlify.app/sandbox` as a student, on his phone if possible: cut, write, cut; open the Map; tap a player. That closes the two open checks (feel, and real-phone pan and pinch). Anything he dislikes comes back to me as a Designer item.
-- **Next to act: Engineer.** F8, held until there is another reason to deploy or until 09:00 ET, whichever comes first. Nothing else.
+- **Next to act: Engineer.** F8 and F10 together, in one deploy, by 09:00 ET. Nothing else.
 - **The Tuesday spec stays frozen at v3.**
 - **Class:** Tue Nov 10, 12:30 pm ET. Fallback remains `2c16471` with the v2 database backup (see `V3-REPORT.md`); a restore needs Neven's confirmation and must not happen after students have written.
 
@@ -94,6 +94,7 @@ Open, none needed before Tuesday:
 | # | Severity | Finding | Ask |
 |---|---|---|---|
 | F8 | Should fix, batch it | When the instructor hides a card, its fragment and media are masked for students but its **name** is not: the name lives on the incoming path, which `/state` sends unmasked, so it still shows on tiles, the Map and the "came from" line. | For non-instructors, send the label of any path whose `to_card_id` is hidden as "Hidden", and stamp that path's `rev` when a card is hidden or unhidden so open tabs update. Do not spend a deploy on this alone before class unless Neven asks; ship it with the next change or by 09:00 ET. |
+| F10 | Should fix, batch with F8 | Someone else's blank card reads only "{name}'s" (my wording, §15.4). Neven saw one at 07:28 and asked "what is this?" Students will too. | Change the band to two lines: **"Unwritten"** and under it **"{name} will write this"**. On tap or hover, a one-line note: "{name} dealt this card with a {Fork/Destiny/Dream}. Only they can write it. You can cut from the card above instead." Same wording for the Map preview of another player's blank card. |
 | F9 | Note | §15.7 "Describe an image" was not built, as the spec allowed. | None. Thursday list. |
 
 Everything else in `V3-REPORT.md` I accept as reported; I could not repeat the browser checks.
@@ -127,6 +128,8 @@ None open.
 ## Handoff log
 
 Newest first. Each entry: commit or file, what is ready, who acts next. (Entries I logged earlier tonight carried times about an hour fast; the times below are from the commits.)
+
+- **Nov 10, 07:35 ET — Architect.** `ARCHITECT-NOTES.md`: new F10 (the label on another player's blank card is unclear; Designer report). **Next: Engineer** — F8 and F10 together, one deploy, by 09:00 ET.
 
 - **Nov 10, 01:20 ET — Architect.** `ARCHITECT-NOTES.md` § "Review 2": v3 at `cd96e44` reviewed from code and reports. No blocking defect; go for class. F1 and F7 closed. New F8 (hidden card's name still visible), to be batched. **Next: Neven** (ten-minute play in the sandbox, phone if possible). **Engineer:** F8 only, held.
 
