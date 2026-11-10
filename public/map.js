@@ -20,7 +20,7 @@ window.openMap=id=>{
  const pointers=new Map();let down=null,lastPinch=null,dragging=false;
  const close=()=>{cancelAnimationFrame(raf);resize.disconnect();wrap.remove();window.removeEventListener('keydown',key);view=null;};
  function centre(cardId){const node=nodes.find(n=>n.id===cardId);if(node){k=.85;tx=W/2-node.x*k;ty=H/2-node.y*k;focus=cardId;}else fit();draw();}
- function fit(){const max=Math.max(...nodes.map(n=>n.radius),240,(240+170*S.world.end_ring)*factor);k=Math.max(.025,Math.min((W-60)/(2*max),(H-180)/(2*max)));tx=W/2;ty=H/2+20;draw();}
+ function fit(){const max=Math.max(...nodes.map(n=>n.radius),240,(240+170*S.world.end_ring)*factor);k=Math.max(.0001,Math.min((W-60)/(2*max),(H-180)/(2*max)));tx=W/2;ty=H/2+20;draw();}
  function update(){const next=layout(cards(),[...S.paths.values()]);old=new Map(nodes.map(n=>[n.id,n]));nodes=next.nodes;factor=next.factor;animation=performance.now();if(!raf)raf=requestAnimationFrame(animate);updatePicker();}
  function updatePicker(){const selected=picker.value;picker.replaceChildren(e('option',{value:''},'All players'),...[...S.players.values()].sort((a,b)=>a.name.localeCompare(b.name)).map(p=>e('option',{value:p.id},p.name)));picker.value=selected;}
  const rect=n=>n.card?.type==='scenario'?[40,56]:[20,28];
@@ -35,7 +35,7 @@ window.openMap=id=>{
  }
  function draw(){paint();}
  function animate(now){const t=Math.min(1,(now-animation)/400);paint(1-Math.pow(1-t,3));if(t<1)raf=requestAnimationFrame(animate);else raf=0;}
- function zoom(next,x=W/2,y=H/2){next=Math.min(7,Math.max(.025,next));const wx=(x-tx)/k,wy=(y-ty)/k;tx=x-wx*next;ty=y-wy*next;k=next;draw();}
+ function zoom(next,x=W/2,y=H/2){next=Math.min(7,Math.max(.0001,next));const wx=(x-tx)/k,wy=(y-ty)/k;tx=x-wx*next;ty=y-wy*next;k=next;draw();}
  function hit(x,y){const wx=(x-tx)/k,wy=(y-ty)/k;return nodes.filter(n=>showDown||!n.path).map(n=>({n,d:Math.hypot(n.x-wx,n.y-wy)})).sort((a,b)=>a.d-b.d).find(({n,d})=>d<Math.max(16,13/k))?.n;}
  function choose(n){selection=n;preview.replaceChildren();if(!n){preview.style.display='none';draw();return;}preview.style.display='block';if(n.path){const p=S.paths.get(n.path.id);preview.append(e('div',{class:'eyebrow'},'Face-down path'),e('h3',{},p.label),e('p',{},J.claimed(p)?`${player(p.claimed_by)} is writing…`:`Dealt by ${player(S.cards.get(p.from_card_id)?.author_id)}`),btn('Play here',()=>{close();go(p.from_card_id);startComposer('fork',{path_id:p.id});},'primary',{disabled:J.claimed(p)}));}else preview.append(e('div',{class:'eyebrow'},`Ring ${n.depth}`),e('h3',{},title(n.card)),e('p',{},n.card.body.slice(0,140)),e('small',{},n.card.author_id?`by ${player(n.card.author_id)}`:'Scenario'),btn('Open',()=>{close();go(n.id);},'primary'));preview.append(btn('×',()=>choose(null),'close',{'aria-label':'Close preview'}));draw();}
  const picker=e('select',{'aria-label':'Player timeline',onchange:ev=>{filter=ev.target.value;draw();}});
