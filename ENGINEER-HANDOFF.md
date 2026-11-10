@@ -1,9 +1,9 @@
 # Current focus
 
-- **v4 core is deployed and ready for review**, runtime `6d927bace8eee3f5ab7a57e127d7dbe527932dfc` / PR #5, published 09:06 ET. [V4-REPORT.md](V4-REPORT.md) contains the §16.8 checklist, evidence, decisions and exact no-go SQL.
+- **v4 core is deployed and ready for review**, runtime `19fdf3bc8b82d5f8037ecfebfba5915a7d459dfc` / PR #6, published 09:13 ET. [V4-REPORT.md](V4-REPORT.md) contains the §16.8 checklist, evidence, decisions and exact no-go SQL.
 - **Next actor: Neven as Designer**, for the 10:30–11:00 walkthrough and 11:00 go/no-go. Architect can review core now in https://jootsy.netlify.app/sandbox . Reload the page before testing.
 - Core checks 2–14 pass; check 1's game flow passes with human listening still needed for the chime. Physical-phone touch/pinch/performance remains the hardware check. No observed functional failure remains.
-- Three v4 publications used; the final permitted sparse-dock alignment correction is pending. Tier 2 remains held until explicit Neven go; nothing deploys after noon. Existing Postgres/Blobs retained; Netlify Pro verified. Credentials remain private.
+- All four permitted v4 production publications are used. The sparse-dock correction is verified. **Designer:** further Tier 2 publication would require explicitly revising the deployment budget as well as giving go. Tier 2 remains held until explicit Neven go; nothing deploys after noon. Existing Postgres/Blobs retained; Netlify Pro verified. Credentials remain private.
 - Direct chat delivery to Bolus was attempted, but the app's thread-list tool failed, so no cross-chat notice was sent. The notice below is ready to relay. Do not rely on automatic alerts.
 
 Authoritative Architect notes and the Current focus for the project are on branch `architect`: [ARCHITECT-NOTES.md](https://github.com/NevenLochhead-bit/jootsy/blob/architect/ARCHITECT-NOTES.md). This file records engineering handoffs only.
@@ -17,7 +17,7 @@ Authoritative Architect notes and the Current focus for the project are on branc
 
 ## v4 core handoff
 
-- Relevant runtime commit: `6d927ba`, PR #5. Review files: V4-REPORT.md, public/editor.js, netlify/functions/api.mjs, netlify/database/migrations/20261110133000_sessions_v4.sql; screenshots under docs/verification/v4-*.jpg.
+- Relevant runtime commit: `19fdf3b`, PR #6. Review files: V4-REPORT.md, public/editor.js, netlify/functions/api.mjs, netlify/database/migrations/20261110133000_sessions_v4.sql; screenshots under docs/verification/v4-*.jpg.
 - Ready: private three-stage sessions, autosave/recovery, Change/Undo including removed subtrees, atomic Commit, committed Board, Cards threads, Wormhole, Jootsy and instructor hiding.
 - Architect acts next on the sandbox review. Designer items for Neven: listen to Commit, try a real phone, then give go/no-go at 11:00 ET. No one should infer go from silence.
-- Notice for Bolus: **Engineer pushed: v4 core is live at 6d927ba; V4-REPORT.md and ENGINEER-HANDOFF.md are ready; Architect reviews the sandbox, and Neven gives the 11:00 go/no-go.**
+- Notice for Bolus: **Engineer pushed: v4 core is live at 19fdf3b; V4-REPORT.md and ENGINEER-HANDOFF.md are ready; Architect reviews the sandbox, and Neven gives the 11:00 go/no-go.**
