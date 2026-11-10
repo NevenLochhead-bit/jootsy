@@ -2,10 +2,10 @@
 
 ## Current focus
 
-- **State (Tue Nov 10, 09:55 ET):** v4 core is live (`19fdf3b`) and Neven is refining it, which I am reading as a working **go on v4**; I have asked him to confirm in a word. **Spec v4.1** is issued: `docs/JOOTSY_TUESDAY_SPEC.md` §17, branch `architect`.
+- **State (Tue Nov 10, 10:00 ET):** v4 core is live (`19fdf3b`). **Neven has said GO on v4** ("go! yes I hear it — perfect"). Class runs on v4; the v3 rollback is now only for an emergency. The commit sound is confirmed by him. **Spec v4.1** is issued: `docs/JOOTSY_TUESDAY_SPEC.md` §17, branch `architect`.
 - **Next to act: Engineer.** §17 in order: A (words, order, removals), B (join screen), then C (sound on cards), then D (light on the wires, Refresh scan). Deploy A+B together as soon as they pass §17.E. **4 deploys left; last deploy 11:45 ET; nothing after 12:00.**
 - **Lanes:** Neven's graphic design notes go to the Engineer directly. Defects go to the Engineer directly. Anything that changes what a player can do or read comes through me.
-- **Next to act: Neven.** Keep playing; confirm go; listen for the commit sound; try a phone.
+- **Next to act: Neven.** Keep playing; try a phone if he can.
 - **No-go path** (unchanged): republish v3 and run the cleanup SQL in `V4-REPORT.md`.
 
 ## Where things are
@@ -56,6 +56,7 @@ Decided (newest last; a later row overrides an earlier one):
 | Nov 10, 09:40 | **After playing v4 — behaviour.** No transition options at all on the third stage. Commit possible after one stage, green when available. Each card: Add image and Add sound; no Paste a link. Add Scenario button beside Refresh. Remove the Jootsy! card at the centre of the Board. Players panel collapsible. Refresh runs a scan. Reasonable upload limits. |
 | Nov 10, 09:40 | **Wires.** Arrowheads go; "an animation on each wire that shows a swelled bit of light passing through the wire." |
 | Nov 10, 09:40 | **Login** must be "clear, easy, accessible"; students must be able to get back to their previous sessions. Graphic design notes go from him to the Engineer directly. |
+| Nov 10, 09:42 | **GO on v4.** "go! yes i hear it - perfect." The commit sound is right. |
 
 For him to veto (my calls inside his rules; they stand unless he objects):
 
@@ -166,6 +167,8 @@ None open.
 ## Handoff log
 
 Newest first. Each entry: commit or file, what is ready, who acts next. (Entries I logged earlier tonight carried times about an hour fast; the times below are from the commits.)
+
+- **Nov 10, 10:00 ET — Architect.** `ARCHITECT-NOTES.md`: Designer **GO on v4** recorded; commit sound confirmed. Tier 2 is released. **Next: Engineer** — §17 (v4.1) A+B, then C, then D; 4 deploys left; last deploy 11:45 ET.
 
 - **Nov 10, 09:55 ET — Architect.** `docs/JOOTSY_TUESDAY_SPEC.md` → **v4.1**: new §17 from the Designer's notes after playing v4. A words/order/removals; B join screen (`mode` on `/join`, never auto-create when returning); C image + sound (`cards.audio_url`, limits, Range support); D light on the wires replacing arrowheads, Refresh scan; acceptance §17.E. No game rule changes. **Next: Engineer** — A+B first.
 
