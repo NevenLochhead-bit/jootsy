@@ -2,7 +2,7 @@ name: Transaction checks
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, engineer-b]
     paths: ["netlify/**", "public/**", "scripts/**", "package.json", ".github/workflows/check.yml"]
 permissions:
   contents: read
@@ -31,3 +31,4 @@ jobs:
       - run: npm run check
       - run: node scripts/api-checks.mjs
       - run: npm run build
+      - run: node scripts/map-checks.mjs
