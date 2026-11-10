@@ -2,13 +2,12 @@
 
 ## Current focus
 
-- **State (Tue Nov 10, 00:40 ET):** v2 is deployed and verified by the Engineer (`main`, code release `2c16471`). My Review 1 found no blocking defect. Since then the Designer has changed the model. **Spec v3** is issued: `docs/JOOTSY_TUESDAY_SPEC.md` §15, branch `architect`.
-- **v3 in one line:** every card is the same; any player cuts (Fork, Destiny, Dream) from any written card; a cut deals blank cards that only the cutter writes; no perimeters; the task is five cards.
-- **Next to act: Engineer.** (1) F1 and F7 below. (2) Spec v3, §15. Cutoff 09:00 ET; snapshot and rollback in §15.10; at most 3 production deploys.
-- **Then: Architect.** Review of v3 against §15.9.
-- **Neven as Designer:** nothing blocking. Three calls of mine are flagged for him under "Designer → For him to veto".
-- **The Tuesday spec is frozen at v3.** New ideas go to "Thursday list" unless they fix a defect.
-- **Class:** Tue Nov 10, 12:30 pm ET. `2c16471` is class-ready and is the fallback if v3 misses its cutoff.
+- **State (Tue Nov 10, 01:20 ET):** **v3 is deployed** (`main`, code `cd96e44`) and I have reviewed it (Review 2 below). **No blocking defect. v3 is go for class** on the Engineer's evidence plus my code review. One should-fix (F8), to be batched, not deployed alone.
+- **What I have not done:** played it. I do not create logins or type passcodes on the live site, and nobody is signed into the sandbox in the browser pane. The feel of the loop is unreviewed by me.
+- **Next to act: Neven.** Ten minutes in `jootsy.netlify.app/sandbox` as a student, on his phone if possible: cut, write, cut; open the Map; tap a player. That closes the two open checks (feel, and real-phone pan and pinch). Anything he dislikes comes back to me as a Designer item.
+- **Next to act: Engineer.** F8, held until there is another reason to deploy or until 09:00 ET, whichever comes first. Nothing else.
+- **The Tuesday spec stays frozen at v3.**
+- **Class:** Tue Nov 10, 12:30 pm ET. Fallback remains `2c16471` with the v2 database backup (see `V3-REPORT.md`); a restore needs Neven's confirmation and must not happen after students have written.
 
 ## Where things are
 
@@ -65,8 +64,39 @@ Open, none needed before Tuesday:
 - Jootsy!: a cut from your card into another player's written card; unlocks at five cards; the event, the notice, the live ticker.
 - Backwriting by inserting a card into your own thread.
 - Sound and video uploads.
+- "Describe an image" (§15.7), not built on Tuesday.
 - Each student's branch as an export for the game review.
 - Edge buttons, if he wants them.
+
+## Review 2 — Tue Nov 10, 01:20 ET (of v3 at `main` `5f5c4b3`, code `cd96e44`)
+
+**Reviewed:** `V3-REPORT.md`, `ENGINEER-HANDOFF.md`, migration `20261110060000_cuts_v3.sql`, `netlify/functions/api.mjs` in full, client strings and routes, `docs/verification/v3-map.jpg`. Live: the site is serving the v3 client (cut row present, hand gone, no perimeter code).
+
+**Against the spec, from the code:**
+
+| Rule | Holds? |
+|---|---|
+| C1 anyone cuts any written, non-dead-end card; Fork 2, Destiny 1, Dream 1 | Yes |
+| C2 only the dealer writes their blank card; name + fragment required | Yes (403 for others) |
+| C3 wormhole own card → own other card | Yes |
+| C4 dead end only by author, only with nothing leaving; no cuts from it | Yes |
+| C5 discard own blanks and wormholes | Yes |
+| C6 cap of 8 blanks | Yes; also applied when deleting a card, since that reopens a blank. Sensible. |
+| C7, C8 ownership, delete | Yes |
+| C9 scenarios | Yes; starting paths gone |
+| C11 no claims | Yes |
+| Migration | One transaction, snapshot first, as specified |
+| F1 | Closed: separate signing secret required; fallback removed in code |
+| F7 | Closed: 15 v2 deploys, 2 for v3; previews and branch builds off; report commits skipped |
+
+**Findings**
+
+| # | Severity | Finding | Ask |
+|---|---|---|---|
+| F8 | Should fix, batch it | When the instructor hides a card, its fragment and media are masked for students but its **name** is not: the name lives on the incoming path, which `/state` sends unmasked, so it still shows on tiles, the Map and the "came from" line. | For non-instructors, send the label of any path whose `to_card_id` is hidden as "Hidden", and stamp that path's `rev` when a card is hidden or unhidden so open tabs update. Do not spend a deploy on this alone before class unless Neven asks; ship it with the next change or by 09:00 ET. |
+| F9 | Note | §15.7 "Describe an image" was not built, as the spec allowed. | None. Thursday list. |
+
+Everything else in `V3-REPORT.md` I accept as reported; I could not repeat the browser checks.
 
 ## Review 1 — Tue Nov 10, 00:13 ET (of v2 at `main` `8d7aea2`)
 
@@ -92,12 +122,13 @@ Open, none needed before Tuesday:
 
 ## Questions for the Engineer
 
-1. F1: is `TOKEN_SECRET` set? Yes or no.
-2. F7 (a) and (c).
+None open.
 
 ## Handoff log
 
 Newest first. Each entry: commit or file, what is ready, who acts next. (Entries I logged earlier tonight carried times about an hour fast; the times below are from the commits.)
+
+- **Nov 10, 01:20 ET — Architect.** `ARCHITECT-NOTES.md` § "Review 2": v3 at `cd96e44` reviewed from code and reports. No blocking defect; go for class. F1 and F7 closed. New F8 (hidden card's name still visible), to be batched. **Next: Neven** (ten-minute play in the sandbox, phone if possible). **Engineer:** F8 only, held.
 
 - **Nov 10, 00:40 ET — Architect.** `docs/JOOTSY_TUESDAY_SPEC.md` → **v3**: §15 rewritten whole. It replaces v2.2–v2.4, which the Engineer had not started. Model change: cuts on paths, blank cards owned by the cutter, anyone cuts from any written card, claims removed, no perimeters, five cards, Players panel, migration (§15.8), acceptance (§15.9), snapshot/rollback/deploy budget (§15.10). Notes rewritten; new finding F7 (deploy credits); F2 withdrawn. **Next: Engineer** — F1, F7, then §15.
 - **Nov 10, 00:15–00:18 ET — Architect.** Spec v2.2 → v2.4 in five commits (`016ec63` … `7927252`), following Designer messages as they arrived. All superseded by v3.
