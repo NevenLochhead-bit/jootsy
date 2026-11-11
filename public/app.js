@@ -33,7 +33,21 @@ function join(){let joinMode=null;const shell=e('main',{class:'join'},mark(),e('
 function choices(id,walk){const offered=paths(id).filter(p=>!p.draft&&p.to_card_id&&alive(S.cards.get(p.to_card_id)));return offered.length?e('section',{class:'choices-section'},e('h3',{},'Choices'),offered.map(p=>btn(p.label||title(S.cards.get(p.to_card_id)),()=>walk(p.to_card_id),`option-link ${p.kind}`,{style:suit(p.kind)}))):null;}
 function face(c,options={}){return e('article',{class:`playing-card ${cardKind(c)}`,style:suit(cardKind(c))},e('span',{class:'suit',title:T[cardKind(c)]?.[1]},T[cardKind(c)]?.[0]),e('h2',{},title(c)),window.renderMedia?.(c),window.renderVideo?.(c),window.renderSound?.(c),e('p',{class:'fragment'},c.body),e('div',{class:'by'},c.author_id?(options.readonly?`by ${player(c.author_id)}`:btn(`by ${player(c.author_id)}`,()=>{closeModal();reader=null;mode='board';render();window.openMap?.(c.id,{player:c.author_id});},'author-link')):'A shared beginning'),options.children,e('span',{class:'suit bottom'},T[cardKind(c)]?.[0]));}
 function transitionReason(c,stage=1){const own=c.author_id===S.player.id,n=mine().length;return k=>stage>=3?'Commit to the board, then keep going.':(k==='wormhole'||k==='jootsy')&&!own?'Start from a card you wrote.':k==='wormhole'&&!mine().some(a=>a.id!==c.id)?'Play a card first.':k==='jootsy'&&!S.world.jootsy_enabled?'Jootsy! is not enabled yet.':k==='jootsy'&&!S.player.is_instructor&&n<S.world.jootsy_min_cards?`${n} of ${S.world.jootsy_min_cards} cards played.`:'';}
-function transitionButtons(c,onChoose,stage=1){if(stage>=3)return null;const reason=transitionReason(c,stage);return e('aside',{class:'transition-buttons'},e('h3',{},'What happens next?'),order.map(k=>e('span',{class:'transition-choice',title:reason(k)||definitions[k]},btn(`${T[k][0]} ${T[k][1]}`,()=>onChoose(k),`cut-option ${k}`,{style:suit(k),disabled:!!reason(k),'aria-label':T[k][1],title:reason(k)||definitions[k]}),e('small',{class:'transition-help'},reason(k)||definitions[k]))));}
+function transitionButtons(card, onChoose, stage = 1) {
+  if (stage >= 3) return null;
+  const reason = card ? transitionReason(card, stage) : () => 'Write this card first.';
+  const choices = order.map(kind => {
+    const disabledReason = reason(kind);
+    const tooltip = disabledReason || definitions[kind];
+    const [icon, label] = T[kind];
+    return e('span', {class: 'transition-choice', title: tooltip},
+      btn(`${icon} ${label}`, () => onChoose?.(kind), `cut-option ${kind}`, {
+        style: suit(kind), disabled: Boolean(disabledReason), 'aria-label': label, title: tooltip
+      }),
+      e('small', {class: 'transition-help'}, card ? tooltip : definitions[kind]));
+  });
+  return e('aside', {class: 'transition-buttons'}, e('h3', {}, 'What happens next?'), choices);
+}
 function modal(content,cls=''){window.panelActive=cls!=='board-reader';overlay.replaceChildren(e('div',{class:'modal-shade'},e('section',{class:`modal ${cls}`,role:'dialog','aria-modal':true},content)));return $('.modal');}
 function closeModal(){window.panelActive=false;overlay.replaceChildren();}
 function closeReader(){reader=null;readTrail=[];closeModal();}
