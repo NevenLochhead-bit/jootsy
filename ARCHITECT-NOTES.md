@@ -2,19 +2,17 @@
 
 ## Current focus
 
-- **State (Tue Nov 10, 11:35 ET):** **All of v4.1 is deployed.** Sound (`bd1cf1e`, 10:24), video (`07f2312`, 10:41), light on the wires + Refresh scan + a video muted fix (`1509e36`, 10:53). **All 8 deploys of the v4 budget are used.**
-- **Freeze lifted by the Designer for visual work only (11:33 ET).** Neven has the Engineer working on redesigns from his own graphic notes, directly. That is his call and his lane.
-- **Conditions I am asking the Engineer to hold to:** styling only (CSS and markup); no change to `netlify/functions`, the database, routes, or any word a player reads; **one** production deploy, **by 11:50 ET**; the hard stop at 12:00 stands. Known-good release to republish if anything looks wrong: runtime `1509e36` (Netlify deploy `6af33dea6e72d49d6ced963b`). Republishing it needs no database change.
-- **Next to act: Engineer.** The visual redesign, under the conditions above. After it deploys: one pass through join → editor → Commit → Board at desktop and 360 px, and say so in `ENGINEER-HANDOFF.md`.
-- **Next to act: Neven.** Reload; play the whole loop once in the sandbox with sound and video; check the scenarios in the class world are the ones he wants.
-- **Not reviewed by me:** the sound, video and wire code (Reviews 1–4 cover everything up to the join screen). I am accepting C, C2 and D on the Engineer's browser evidence, given the time.
-- **Emergency fallback only:** republish v3 and run the cleanup SQL in `V4-REPORT.md`.
+- **State (Wed Nov 11, 23:55 ET):** live site is `main` `ca461c6` (confirmed: the served editor matches it). Since my last entry the Engineer shipped PR #11 (the Designer's visual redesign), #12 (white logo; demo names), #13 (demo players renamed Student 1–35), and **#14 and #15 (editor layout fixes, Tue 22:15 and 22:40)**. Review 5 below: all five are sound in themselves. **One finding must be fixed before the next release: F13.**
+- **F13, before anything else ships:** PRs #14 and #15 changed `public/editor.js`, `public/app.js` and `public/style.css` directly, but **`source.tar.gz` still holds the older copies**. The "Expand source bundle" workflow untars that file over the tree whenever it changes, so **the Engineer's next bundle release will silently undo #14 and #15** (173 changed lines).
+- **Next to act: Engineer.** Fix F13 (see Review 5 for the two acceptable ways), and bring `ENGINEER-HANDOFF.md` up to date: it stops at PR #13 and says nothing of #14 or #15. No game change is requested.
+- **Next to act: Neven.** Nothing blocking. Thursday's class runs on what is live. If he wants anything changed before then, it comes through me as a spec line or to the Engineer as a visual note, **after** F13.
+- **The class world now holds students' work.** From here on: migrations are additive only; no test writing in `mdst1050`; a database snapshot before any migration; the sandbox is the demonstration board and is not for automated tests either.
 
 ## Where things are
 
 | What | Where |
 |---|---|
-| The spec (v4.1; §17 is the change to build) | `docs/JOOTSY_TUESDAY_SPEC.md` on branch `architect` |
+| The spec (v4.1; fully built and live) | `docs/JOOTSY_TUESDAY_SPEC.md` on branch `architect` |
 | Build plan for Neven (v2; out of date since v3) | `docs/JOOTSY_BUILD_PLAN.md` on branch `architect` |
 | These notes | `ARCHITECT-NOTES.md` on branch `architect` |
 | Engineer's reports | `FINAL-REPORT.md`, `ENGINEER-REPORT.md`, `SLICE-B-REPORT.md` on `main` |
@@ -86,6 +84,32 @@ Open, none needed before class:
 - "Describe an image" (§15.7), not built on Tuesday.
 - Each student's branch as an export for the game review.
 - Edge buttons, if he wants them.
+
+## Review 5 — Wed Nov 11, 23:55 ET (of PRs #11–#15, `1509e36..ca461c6`)
+
+**Reviewed:** the diff of each PR, both data migrations, the expand-source workflow, `source.tar.gz` against the tree, `ENGINEER-HANDOFF.md`, and the live site's served `editor.js` and `style.css`.
+
+| PR | When (ET) | What it changed | Verdict |
+|---|---|---|---|
+| #11 | Tue 11:39 | Redesign from the Designer's notes: header, scenario "source" nodes (`public/source-node.js`), small edits to `app.js`, `map.js`, `style.css`. Client only. | Fine. Not purely styling, as I had asked, but nothing server-side and no player-facing wording changed. |
+| #12 | Tue 11:59 | White logo (CSS). Migration renaming **sandbox** players to fictional names. | Fine. The migration is scoped by `slug='sandbox'` and exits if that world is missing. |
+| #13 | Tue 12:05 | Migration renaming the same sandbox players to "Student 1…35". No app code. | Fine. **Published five minutes after the 12:00 stop**, at the Designer's request; recorded, not contested. |
+| #14 | Tue 22:15 | Editor: transition buttons stay compact on an unwritten card; column 3 heading "Then commit" → **"Then what?"**. Client only. | Fine. Save, Change and Commit logic untouched. One player-facing phrase changed without a spec line; it is better than what it replaced. |
+| #15 | Tue 22:40 | Editor: aligned headings, equal card sizes, "From {card}" caption on stage-three cells; 100 lines of CSS. Client only. | Fine. Same logic paths; a null session is still guarded before `build()`. |
+
+Neither migration touches `mdst1050`, `stress`, the instructor, passcodes, cards or paths. Transaction checks passed on `main` after #14 and #15.
+
+**Findings**
+
+| # | Severity | Finding | Ask |
+|---|---|---|---|
+| F13 | **Fix before the next release** | `source.tar.gz` is the input to `.github/workflows/expand-source.yml`, which runs `tar -xzf source.tar.gz` over the working tree on any push that changes the tarball (on `main` or `engineer-v3`) and commits the result. #14 and #15 were made directly on the tree from `fix/*` branches and did not update the tarball. Verified: the tarball's `public/editor.js`, `public/app.js` and `public/style.css` differ from the tree by 57, 16 and 100 lines; `map.js` and `api.mjs` are identical. The next tarball push reverts both PRs without any conflict or warning, and `engineer-v3` merges `main` with `-X ours` before expanding, so it would not notice either. | Choose one and say which in the handoff. **(a) Preferred: retire the bundle.** Make the tree on `main` the only source of truth, delete `source.tar.gz` and the expand workflow, keep `check.yml`. A 2.2 MB binary re-committed on every release is also what is bloating the repo. **(b) Minimum:** regenerate `source.tar.gz` from `main` at `ca461c6` so the two agree, and add a CI check that fails when the tarball and the tree differ. Either way: one `[skip netlify]` commit, **no production deploy needed**, since the served files do not change. |
+| F14 | Process | #14 and #15 came from a different working pattern (`fix/*` branches, direct tree edits) with no entry in `ENGINEER-HANDOFF.md`, whose Current focus still names #13 as the latest release. | Update the handoff: what #14 and #15 changed, how they were verified (browser, widths), and the deploy count. If a second engineer or session is working on this repo, name it there, so both know about the tarball. |
+| F15 | Housekeeping | Stale remote branches: `engineer-b`, `fix/editor-move-layout`, `fix/session-card-alignment` (both merged). | Delete the merged ones when convenient. |
+
+**Still unverified by anyone:** a physical phone, a real screen reader, and reduced-motion behaviour. F11 and F12 remain open as after-class items.
+
+**Credits:** by the Engineer's count the site had 11 production publications by Tuesday 12:05, and #14 and #15 make 13 since my budget of 8, at about 15 credits each. Neven should look at the balance before the next round of changes.
 
 ## Review 4 — Tue Nov 10, 10:15 ET (of v4.1 A+B at `main` `41a75d3`, runtime `f2e317e`)
 
@@ -175,11 +199,14 @@ Everything else in `V3-REPORT.md` I accept as reported; I could not repeat the b
 
 ## Questions for the Engineer
 
-None open.
+1. F13: (a) or (b)?
+2. F14: was #14/#15 a second session or agent? Where is its verification recorded?
 
 ## Handoff log
 
 Newest first. Each entry: commit or file, what is ready, who acts next. (Entries I logged earlier tonight carried times about an hour fast; the times below are from the commits.)
+
+- **Nov 11, 23:55 ET — Architect.** `ARCHITECT-NOTES.md` § "Review 5": PRs #11–#15 reviewed at `ca461c6`; all sound; live site confirmed to match. **F13** (the source bundle will revert #14 and #15 on the next release) must be fixed first; F14 handoff out of date; F15 stale branches. **Next: Engineer** — F13 then F14, no deploy needed.
 
 - **Nov 10, 11:35 ET — Architect.** `ARCHITECT-NOTES.md` Current focus: Designer has lifted the freeze for a visual redesign, working with the Engineer directly. Conditions recorded (styling only, one deploy by 11:50, rollback target `1509e36`). The Engineer's final v4.1 evidence (sound, video, wires) is read and accepted. **Next: Engineer.**
 
