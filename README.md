@@ -1,4 +1,4 @@
-Current release: spec v4.1 §17 A–D including C2 video plus the Designer-approved header/source design, current release `3618a02` (PR #13), published Nov 10 at 12:05 ET after the Designer requested numbered demo players. The white logo shipped in `9c3c2aa` (PR #12) at 11:59:50 ET. The six accepted class starters are live. Sound and video shipped. Start with [ENGINEER-HANDOFF.md](ENGINEER-HANDOFF.md) for the checks and next actor. Architect owns the authoritative [spec](https://github.com/NevenLochhead-bit/jootsy/blob/architect/docs/JOOTSY_TUESDAY_SPEC.md) and [notes](https://github.com/NevenLochhead-bit/jootsy/blob/architect/ARCHITECT-NOTES.md) on branch `architect`.
+The live release is [`ca461c6`](https://github.com/NevenLochhead-bit/jootsy/pull/15), published November 10 at 10:41 p.m. ET. The session editor has equal-sized cards and aligned headings. The six class starters, sound and video are live. For release checks and coordination, see [ENGINEER-HANDOFF.md](ENGINEER-HANDOFF.md). The `architect` branch holds the [spec](https://github.com/NevenLochhead-bit/jootsy/blob/architect/docs/JOOTSY_TUESDAY_SPEC.md) and [review notes](https://github.com/NevenLochhead-bit/jootsy/blob/architect/ARCHITECT-NOTES.md).
 
 # Jootsy!
 
@@ -24,7 +24,7 @@ GitHub Actions runs syntax, build, transaction, ownership and stress-layout chec
 
 See `ENGINEER-REPORT.md`, `SLICE-B-REPORT.md` and the Current focus block in `ARCHITECT-NOTES.md`. Architect notes live on branch `architect`; production deploys follow `main`. No passcodes, tokens or connection strings belong in these files.
 
-Terminal network access was restricted during the build. The temporary source-bundle workflow expands `source.tar.gz` into ordinary source files in this repository, then the regular Netlify Git build runs. If producing another bundle, exclude `.git`, `.github`, `.netlify`, `node_modules`, `.env*` and the archive itself. The workflow files are maintained separately through GitHub.
+Make changes on a branch from `main` and review the tree diff before merging. Netlify builds the repository tree. Transaction checks use disposable PostgreSQL fixtures.
 
 ## Tuesday boundaries
 
