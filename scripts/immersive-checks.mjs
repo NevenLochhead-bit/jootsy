@@ -1,5 +1,5 @@
 import {strict as assert} from 'node:assert';
-import {readingGraph, futureCards, followPath, mergeComments} from '../public/immersive-model.js';
+import {readingGraph, futureCards, followPath, mergeComments, travelMotion} from '../public/immersive-model.js';
 
 const cards = [
   {id: 'root', type: 'scenario'}, {id: 'a'}, {id: 'b'},
@@ -42,4 +42,19 @@ const comment = (id, seq) => ({id, seq});
 const merged = mergeComments([comment('later', '9007199254740995'), comment('first', '1')],
   [comment('middle', '9007199254740994'), comment('first', '1')]);
 assert.deepEqual(merged.map(entry => entry.id), ['first', 'middle', 'later']);
+for (const kind of ['destiny', 'fork', 'dream', 'wormhole', 'jootsy']) {
+  for (const side of [-1, 1]) {
+    const moving = travelMotion(kind, side);
+    assert.equal(moving.departing[0].transform, 'translate3d(0,0,0) rotateY(0deg)');
+    assert.equal(moving.arriving.at(-1).transform, 'translate3d(0,0,0) rotateY(0deg)');
+    assert.equal(moving.arriving.at(-1).filter, 'blur(0px)');
+    assert.equal(moving.arriving[0].filter, 'blur(12px)');
+    for (const frame of [...moving.departing, ...moving.arriving, ...moving.distance, ...moving.floor]) {
+      assert.equal(frame.opacity, undefined, 'Travel must preserve the physical card instead of fading it.');
+    }
+    assert(moving.departing.at(-1).transform.includes(kind === 'wormhole' ? '-1100px' : '960px'));
+    assert(moving.duration >= 700 && moving.duration <= 900);
+  }
+}
 console.log('PASS immersive graph: committed visible cards only; actual continuations; bounded route previews; 1,000 repeated moves; Wormhole return; immutable stories; lossless comment cursors.');
+console.log('PASS spatial travel: simultaneous card approach and departure; no opacity fades; blurred arrivals; reverse Wormhole depth; both branch directions.');

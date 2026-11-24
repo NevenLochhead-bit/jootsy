@@ -1,4 +1,4 @@
-import {readingGraph, futureCards, followPath, MOVE_COLORS} from './immersive-model.js';
+import {readingGraph, futureCards, followPath, travelMotion, MOVE_COLORS} from './immersive-model.js';
 import {createPlaytestChat} from './playtest-chat.js';
 
 const J = window.Jootsy;
@@ -6,26 +6,12 @@ let view = null;
 const graphNow = () => readingGraph(J.S.cards.values(), J.S.paths.values());
 const motion = matchMedia('(prefers-reduced-motion: reduce)');
 
-function movement(kind, leaving) {
-  const direction = leaving ? 1 : -1;
-  const end = {opacity: leaving ? 0 : 1, transform: 'translate3d(0,0,0) rotate(0) scale(1)', filter: 'blur(0)'};
-  const displaced = {
-    destiny: `translate3d(0,0,${direction * 160}px) scale(${leaving ? 1.12 : .88})`,
-    fork: `translate3d(${direction * -30}px,0,${direction * 100}px) scale(${leaving ? 1.06 : .94})`,
-    dream: `translate3d(0,${direction * -22}px,0) rotate(${direction * .8}deg) scale(${leaving ? 1.025 : .975})`,
-    wormhole: `translate3d(${direction * 18}px,0,${direction * -190}px) scale(${leaving ? .84 : 1.16})`,
-    jootsy: `translate3d(${direction * -65}px,0,0) rotateY(${direction * 5}deg)`
-  };
-  const away = {opacity: leaving ? 0 : 0, transform: displaced[kind] || displaced.destiny,
-    filter: kind === 'dream' ? 'blur(3px)' : 'blur(0)'};
-  return leaving ? [{...end, opacity: 1}, away] : [away, end];
-}
-
 window.openImmersive = startId => {
   if (view) return;
   const {e, btn, S} = J;
   let graph = graphNow(), journey = [], activeId = null, busy = false, closed = false, navigation = 0;
   let soundOn = true, chatOpen = true, arrivalKind = null, activeFingerprint = '', choicesFingerprint = '', chat, animations = [];
+  let departingPlane = null;
   const frame = e('div', {class: 'immersive-reading'});
   const distance = e('div', {class: 'immersive-distance', 'aria-hidden': true});
   const floor = e('div', {class: 'immersive-floor', 'aria-hidden': true});
@@ -111,21 +97,30 @@ window.openImmersive = startId => {
     }
   }
 
-  async function animate(kind, leaving) {
+  function cardBack(color) {
+    return e('article', {class: 'playing-card immersive-card immersive-card-back',
+      style: `--suit:${color}`, 'aria-hidden': true}, e('span', {class: 'immersive-future-lines'}));
+  }
+
+  async function animateTravel(kind, side, target) {
     if (motion.matches || closed || !frame.animate) return;
-    const duration = kind === 'dream' ? 300 : kind === 'wormhole' ? 220 : 200;
-    const cardAnimation = frame.animate(movement(kind, leaving), {duration, easing: 'ease-in-out', fill: 'both'});
-    const gridAnimation = floor.animate([
-      {backgroundPosition: '0 0'},
-      {backgroundPosition: kind === 'jootsy' ? '36px 0' : `0 ${kind === 'wormhole' ? '-36' : '36'}px`}
-    ], {duration, easing: 'ease-in-out'});
-    animations.push(cardAnimation, gridAnimation);
-    try {await cardAnimation.finished;} catch {}
+    const moving = travelMotion(kind, side);
+    const options = {duration: moving.duration, easing: 'cubic-bezier(.35,0,.2,1)', fill: 'both'};
+    const previous = frame.firstChild;
+    departingPlane = e('div', {class: 'immersive-flight', 'aria-hidden': true, inert: true}, previous);
+    scene.append(departingPlane);
+    frame.replaceChildren(cardBack(MOVE_COLORS[J.cardKind(target)] || MOVE_COLORS.scenario));
+    const approaching = frame.animate(moving.arriving, options);
+    animations.push(approaching, departingPlane.animate(moving.departing, options),
+      distance.animate(moving.distance, options), floor.animate(moving.floor, options));
+    try {await approaching.finished;} catch {}
   }
 
   function finishAnimations() {
     for (const animation of animations) animation.cancel();
     animations = [];
+    departingPlane?.remove();
+    departingPlane = null;
   }
 
   function markPlace() {
@@ -139,14 +134,10 @@ window.openImmersive = startId => {
   function drawDistance() {
     const previews = activeId ? futureCards(graph, activeId) : [];
     distance.replaceChildren(...previews.map(node => {
-      const card = graph.cards.get(node.cardId);
       const color = MOVE_COLORS[node.path.kind] || MOVE_COLORS.fork;
       return e('div', {class: `immersive-future depth-${node.depth}`,
         style: `--future-x:${node.x}px;--future-z:${-node.depth * 640}px;--future-y:${-120 + node.depth * 20}px;--future-color:${color}`},
-        e('span', {class: 'immersive-future-type'}, J.T[node.path.kind]?.[1] || 'Card'),
-        e('span', {class: 'immersive-future-title'}, J.title(card)),
-        e('span', {class: 'immersive-future-lines'}),
-        node.continues ? e('span', {class: 'immersive-future-more'}, `${node.continues} ${node.continues === 1 ? 'path' : 'paths'} beyond`) : null);
+        e('span', {class: 'immersive-future-lines'}));
     }));
   }
 
@@ -163,6 +154,9 @@ window.openImmersive = startId => {
     face.classList.add('immersive-card');
     const heading = face.querySelector('h2');
     heading.tabIndex = -1;
+    const contents = e('div', {class: 'immersive-card-scroll', tabindex: 0, 'aria-label': 'Story card contents'});
+    for (const child of [...face.children]) if (!child.classList.contains('suit')) contents.append(child);
+    face.append(contents);
     frame.replaceChildren(face);
     paintChoices();
     passage.textContent = announce ? (kind === 'wormhole' ? 'Back through the wormhole.' : kind === 'jootsy' ? 'Into another timeline.' : J.title(card)) : '';
@@ -185,12 +179,9 @@ window.openImmersive = startId => {
     choicesFingerprint = offeredFingerprint();
     choices.replaceChildren(...offered.map(path => {
       const target = graph.cards.get(path.to_card_id);
-      const continuation = (graph.outgoing.get(target.id) || []).length;
       return btn([
         e('span', {class: 'immersive-choice-kind'}, J.T[path.kind]?.[0], ' ', J.T[path.kind]?.[1]),
         e('span', {class: 'immersive-choice-label'}, path.label || J.title(target)),
-        e('span', {class: 'immersive-choice-beyond'}, continuation ?
-          `${continuation} ${continuation === 1 ? 'path' : 'paths'} beyond` : 'Last card on this path'),
         e('span', {class: 'immersive-choice-arrow', 'aria-hidden': true}, path.kind === 'wormhole' ? '↶' : '↗')
       ], () => walk(path), 'immersive-choice', {'data-path-id': path.id,
         style: `--choice-color:${MOVE_COLORS[path.kind] || MOVE_COLORS.fork}`});
@@ -199,23 +190,25 @@ window.openImmersive = startId => {
       btn('Try another beginning', () => showBeginnings()));
   }
 
-  async function travel(nextJourney, kind) {
+  async function travel(nextJourney, kind, side = 1) {
     if (busy || closed) return;
+    const targetId = nextJourney.at(-1)?.cardId;
+    const target = graph.cards.get(targetId);
+    if (!target) {update(); return;}
     busy = true;
     const token = ++navigation;
     choices.setAttribute('aria-busy', 'true');
     for (const button of choices.querySelectorAll('button')) button.disabled = true;
     stopMedia();
-    await animate(kind, true);
+    await animateTravel(kind, side, target);
     if (closed || token !== navigation) return;
+    graph = graphNow();
+    if (!graph.cards.has(targetId)) {showBeginnings(); return;}
     journey = nextJourney;
     activeId = journey.at(-1).cardId;
     arrivalKind = kind;
     finishAnimations();
     paintCard();
-    await animate(kind, false);
-    if (closed || token !== navigation) return;
-    finishAnimations();
     busy = false;
     choices.removeAttribute('aria-busy');
     choices.scrollTop = 0;
@@ -227,7 +220,9 @@ window.openImmersive = startId => {
     graph = graphNow();
     const fresh = graph.outgoing.get(activeId)?.find(candidate => candidate.id === path.id);
     if (!fresh) {update(); return;}
-    travel(followPath(journey, fresh), fresh.kind);
+    const offered = graph.outgoing.get(activeId);
+    const side = offered.indexOf(fresh) < (offered.length - 1) / 2 ? -1 : 1;
+    travel(followPath(journey, fresh), fresh.kind, side);
   }
 
   function goBack() {

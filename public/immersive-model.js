@@ -3,6 +3,26 @@ export const MOVE_COLORS = {
   dream: '#ffd84a', wormhole: '#a8b9c8', jootsy: '#ff5fb0'
 };
 
+export function travelMotion(kind, side = 1) {
+  const lane = side < 0 ? -1 : 1;
+  const reverse = kind === 'wormhole';
+  const drift = kind === 'dream' ? -30 : 0;
+  const turn = kind === 'jootsy' ? 11 : kind === 'fork' ? 6 : 3;
+  const centered = {transform: 'translate3d(0,0,0) rotateY(0deg)', filter: 'blur(0px)'};
+  const past = {transform: `translate3d(${-lane * 760}px,${80 + drift}px,960px) rotateY(${-lane * turn}deg)`, filter: 'blur(12px)'};
+  const ahead = {transform: `translate3d(${lane * 430}px,${-20 + drift}px,-1100px) rotateY(${lane * turn}deg)`, filter: 'blur(12px)'};
+  const between = {transform: `translate3d(${lane * 150}px,${drift}px,-420px) rotateY(${lane * turn / 2}deg)`, filter: 'blur(7px)', offset: .65};
+  return {
+    duration: kind === 'dream' ? 880 : kind === 'jootsy' ? 760 : 720,
+    departing: [centered, reverse ? ahead : past],
+    arriving: reverse ? [past, centered] : [ahead, between, centered],
+    distance: [{transform: 'translate3d(0,0,0)'},
+      {transform: `translate3d(${-lane * 180}px,0,${reverse ? -580 : 580}px)`}],
+    floor: [{backgroundPosition: '0 0'},
+      {backgroundPosition: kind === 'jootsy' ? `${lane * 144}px 72px` : `0 ${reverse ? -144 : 144}px`}]
+  };
+}
+
 export function readingGraph(cardValues, pathValues) {
   const cards = new Map([...cardValues]
     .filter(card => !card.deleted && !card.draft && !card.hidden)
