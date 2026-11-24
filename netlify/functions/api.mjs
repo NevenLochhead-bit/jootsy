@@ -1,6 +1,7 @@
 import { getDatabase } from '@netlify/database';
 import { getStore } from '@netlify/blobs';
 import {soundType,videoType,mediaResponse,SOUND_ERROR,VIDEO_ERROR,IMAGE_LIMIT,SOUND_LIMIT,VIDEO_LIMIT} from './lib/media.mjs';
+import {playtestComments} from './lib/playtest.mjs';
 let testMediaStore;
 const mediaStore=()=>testMediaStore??getStore({name:'jootsy-images',consistency:'strong'});
 export function setTestMediaStore(store){if(!process.env.CI_TEST_DATABASE)throw Error('Disposable CI only.');testMediaStore=store;}
@@ -86,6 +87,12 @@ export default async function handler(req){
   if(url.pathname.startsWith('/media/')){if(!['GET','HEAD'].includes(req.method))return new Response('Method not allowed',{status:405});const key=url.pathname.slice(7);if(!/^[a-z0-9-]+\/[a-z0-9-]+\.(jpg|mp3|m4a|mp4)$/i.test(key))return new Response('Not found',{status:404});const entry=await mediaStore().get(key,{type:'arrayBuffer'});return entry?mediaResponse(req,entry,key.endsWith('.mp4')?'video/mp4':key.endsWith('.mp3')?'audio/mpeg':key.endsWith('.m4a')?'audio/mp4':'image/jpeg'):new Response('Not found',{status:404});}
   const parts=url.pathname.split('/').filter(Boolean);const slug=parts[2],route=parts.slice(3),method=req.method;
   if(parts[0]!=='api'||parts[1]!=='w')fail(404,'route','This address does not exist.');
+  if(route[0]==='playtest'&&route[1]==='comments'&&route.length===2){
+   return json(await transaction(slug,async(c,w)=>{
+    const p=await auth(c,w,req);
+    return playtestComments({c,w,p,req,url,fail,text});
+   },method==='GET'));
+  }
   if(route[0]==='join'&&method==='POST'){
    const b=await req.json();if(!['new','returning'].includes(b.mode))fail(400,'mode',"Choose 'I'm new' or 'I've played before'.",{field:'name'});
    const name=text(typeof b.name==='string'?b.name.trim().replace(/\s+/g,' '):b.name,40,'Name'),key=name.toLocaleLowerCase('en-CA');
