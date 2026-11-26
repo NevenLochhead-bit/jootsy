@@ -1,5 +1,7 @@
 # Current focus
 
+- Jootsy Solo is prepared for release. See [the Solo handoff](SOLO-HANDOFF.md) for its separate storage, email setup and release checks.
+
 - **Live release** [`ca461c6`](https://github.com/NevenLochhead-bit/jootsy/commit/ca461c67085bb6a95678ac5e47113e3dcb951530), [PR #15](https://github.com/NevenLochhead-bit/jootsy/pull/15). Netlify deploy `6af3e3ca24bd2969218789d6` published on November 10 at **10:41:09 p.m. ET**, the **13th production publication**. See the editor release checks below.
 - **Review 5 and F13** The files on `main` are the source of truth. This cleanup retires `source.tar.gz` and the archive expansion workflow. Transaction checks run from Git on the existing push and manual triggers. Review 5 accepted PRs #11–#15. [Architect review at 8238ba3](https://github.com/NevenLochhead-bit/jootsy/blob/8238ba3/ARCHITECT-NOTES.md)
 - **Earlier demo release** [PR #13](https://github.com/NevenLochhead-bit/jootsy/pull/13) numbered the Sandbox players. Deploy `6af34eaaac6dbcc0b7bf794c` published on November 10 at 12:05:10 p.m. ET as publication 11.

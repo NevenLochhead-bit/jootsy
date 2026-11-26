@@ -27,7 +27,7 @@ window.openImmersive = startId => {
     stopMedia(false);
     if (activeId) startMedia();
   }, '', {'aria-pressed': true});
-  const chatToggle = btn('Chat', () => {
+  const chatToggle = btn(J.readerSidebarLabel || 'Chat', () => {
     chatOpen = !chatOpen;
     shell.classList.toggle('chat-hidden', !chatOpen);
     chat.element.hidden = !chatOpen;
@@ -40,7 +40,7 @@ window.openImmersive = startId => {
   const stage = e('div', {class: 'immersive-main'},
     e('div', {class: 'immersive-toolbar'}, e('div', {}, back, beginnings), e('div', {}, sound, chatToggle)),
     passage, scene, mediaStatus, choices);
-  chat = createPlaytestChat(J, id => jumpFromChat(id));
+  chat = (J.createReaderSidebar || createPlaytestChat)(J, id => jumpFromChat(id));
   chat.element.id = 'immersive-chat';
   const shell = e('div', {class: 'immersive-shell'}, stage, chat.element);
   document.querySelector('#view').append(shell);
@@ -126,7 +126,7 @@ window.openImmersive = startId => {
   function markPlace() {
     const hash = new URLSearchParams({view: 'play'});
     if (activeId) hash.set('card', activeId);
-    history.replaceState(null, '', `${location.pathname}${location.search}#${hash}`);
+    history.replaceState(null, '', J.readerLocation ? J.readerLocation(activeId) : `${location.pathname}${location.search}#${hash}`);
     back.disabled = journey.length < 2;
     chatToggle.disabled = !activeId;
   }

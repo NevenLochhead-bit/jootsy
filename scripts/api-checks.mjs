@@ -2,6 +2,7 @@ import {readFile} from 'node:fs/promises';
 import {strict as assert} from 'node:assert';
 import {getDatabase} from '@netlify/database';
 import {runPlaytestChecks} from './playtest-checks.mjs';
+import {runSoloChecks} from './solo-checks.mjs';
 import handler,{closeDatabase,setTestMediaStore} from '../netlify/functions/api.mjs';
 if(!process.env.CI_TEST_DATABASE)throw Error('Only run against disposable CI Postgres.');
 process.env.TOKEN_SECRET||='disposable_ci_signing_key_only_0123456789abcdef';
@@ -77,4 +78,4 @@ assert.deepEqual((await db.pool.query("SELECT p.* FROM players p JOIN worlds w O
 const numbered=(await db.pool.query("SELECT p.name,p.name_key FROM players p JOIN worlds w ON w.id=p.world_id WHERE w.slug='sandbox' AND NOT p.is_instructor ORDER BY p.created_at,p.id")).rows;
 assert.equal(numbered.length,demoAfter.length);numbered.forEach((p,i)=>{assert.equal(p.name,`Student ${i+1}`);assert.equal(p.name_key,`student ${i+1}`);});
 console.log('PASS numbered demo players: complete consecutive list; identities preserved; no class/stress/instructor changes.');
-console.log('PASS v4: additive migration; v3 legacy data; no public blanks; private sessions incl instructor; second device; one-session guard; stage cap; atomic commit; blank rejection; author permissions; peer news; Change tree/link/subtree preservation; discard; Wormhole/Jootsy permissions + five-card threshold + instructor exemption; global and target Jootsy events; hidden names + incoming path revision deltas; concurrent same-cell write; ten concurrent independent commits; scenario admin; token reset; SQL tree invariant.');await runPlaytestChecks({pool:db.pool,handler,player:a,cardId:root.id,otherCardId:root2.id,peers:ten});await db.pool.end();await closeDatabase();
+console.log('PASS v4: additive migration; v3 legacy data; no public blanks; private sessions incl instructor; second device; one-session guard; stage cap; atomic commit; blank rejection; author permissions; peer news; Change tree/link/subtree preservation; discard; Wormhole/Jootsy permissions + five-card threshold + instructor exemption; global and target Jootsy events; hidden names + incoming path revision deltas; concurrent same-cell write; ten concurrent independent commits; scenario admin; token reset; SQL tree invariant.');await runPlaytestChecks({pool:db.pool,handler,player:a,cardId:root.id,otherCardId:root2.id,peers:ten});await runSoloChecks(db.pool);await db.pool.end();await closeDatabase();

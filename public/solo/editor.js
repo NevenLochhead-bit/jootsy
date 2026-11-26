@@ -1,0 +1,85 @@
+const J=window.Jootsy,{S,e,btn,api,refresh,paths,title,player,cards}=J;
+let forms=new Map(),labels=new Map(),timers=new Map(),queue=Promise.resolve(),pending=0,undoState=null,root=null,commitButton,status,error,bufferKey,buffer={};
+window.editorActive=false;
+const sessionPaths=id=>paths(id).filter(p=>p.draft&&p.session_id===S.editSession?.id);
+const setError=err=>{if(error)error.textContent=err.message||String(err);else J.toast(err.message||String(err));};
+function nextAction(){if(undoState){undoState=null;document.querySelectorAll('[data-change]').forEach(b=>b.textContent='Change');}}
+function enqueue(fn){pending++;updateCommit();const task=queue.then(fn);queue=task.catch(setError).finally(()=>{pending--;updateCommit();});return task;}
+function remember(p,f){buffer[p.id]={label:f.name.value,body:f.body.value,...f.media.raw()};localStorage.setItem(bufferKey,JSON.stringify(buffer));}
+async function saveCell(id){if(error)error.textContent='';const f=forms.get(id),p=S.paths.get(id);if(!f||!p||p.deleted)return;const value={label:f.name.value,body:f.body.value,...f.media.value()},signature=JSON.stringify(value);if(signature===f.saved)return;if(!p.to_card_id&&!value.label.trim()&&!value.body.trim()&&!value.media_url&&!value.audio_url&&!value.video_url&&!value.model_url)return;
+ f.state.textContent='Saving…';const result=await api(p.to_card_id?`cards/${p.to_card_id}`:'plays',p.to_card_id?'PATCH':'POST',p.to_card_id?value:{path_id:p.id,...value});
+ S.cards.set(result.card.id,result.card);S.paths.set(id,{...p,to_card_id:result.card.id,label:value.label});f.saved=signature;f.state.textContent='Saved';f.cardId=result.card.id;await refresh();if(f.stage<3)f.actions.replaceChildren(J.transitionButtons(result.card,k=>choose(result.card.id,k,sessionPaths(result.card.id).length>0),f.stage));updateCommit();
+}
+function requestSave(id,immediate=false){clearTimeout(timers.get(id));const save=()=>{timers.delete(id);enqueue(()=>saveCell(id)).catch(()=>{});};if(immediate)save();else timers.set(id,setTimeout(save,1900));updateCommit();}
+window.flushEditor=async()=>{if(!window.editorActive)return;for(const id of forms.keys()){clearTimeout(timers.get(id));timers.delete(id);enqueue(()=>saveCell(id)).catch(()=>{});}await queue;if(error?.textContent)throw Error(error.textContent);};
+window.leaveEditor=()=>{for(const id of forms.keys())requestSave(id,true);window.editorActive=false;root=null;};
+function updateCommit(){if(!commitButton)return;const offered=[...S.paths.values()].filter(p=>!p.deleted&&p.draft&&p.session_id===S.editSession?.id),blank=offered.some(p=>!p.to_card_id)||[...forms.values()].some(f=>!f.name.value.trim()||!f.body.value.trim());let reason=!offered.length?'Add a card or link before committing.':blank?'Write every cell before committing.':pending||timers.size?'Saving your session…':'';commitButton.disabled=!!reason;commitButton.title=reason;status.textContent=reason||'Session saved. Ready to commit.';}
+function optionButtons(sourceId){const offered=paths(sourceId).filter(p=>!p.deleted&&(!p.draft||p.session_id===S.editSession?.id));if(!offered.length)return null;return e('section',{class:'choices-section draft-options'},e('h3',{},'Choices'),offered.map(p=>{const label=btn(p.label||(['wormhole','jootsy'].includes(p.kind)?`→ ${title(S.cards.get(p.to_card_id))}`:'Write a choice'),()=>p.draft?document.querySelector(`[data-cell="${p.id}"]`)?.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'}):J.go(p.to_card_id),`option-link ${p.kind}`,{style:J.suit(p.kind)});if(p.draft)labels.set(p.id,label);return label;}));}
+function changeArrow(p){const sourceId=p.from_card_id,change=btn(undoState?.sourceId===sourceId?'Undo':'Change',()=>undoState?.sourceId===sourceId?undo():changePicker(sourceId),'change-button',{'data-change':sourceId});return e('div',{class:'edit-arrow',style:J.suit(p.kind)},e('span',{class:'arrow-kind',title:J.definitions[p.kind]},J.T[p.kind][0]),e('span',{class:'arrow-line'},'→'),change);}
+function cell(p, stage) {
+ const c = S.cards.get(p.to_card_id);
+ const wrap = e('div', {class: 'editor-cell', 'data-cell': p.id}, changeArrow(p));
+ const sourceCaption = stage === 3 ? `From ${title(S.cards.get(p.from_card_id))}` : null;
+ if (['wormhole', 'jootsy'].includes(p.kind)) {
+  wrap.append(e('article', {class: `link-cell ${p.kind}`, style: J.suit(p.kind), tabindex: 0},
+    sourceCaption ? e('div', {class: 'eyebrow'}, sourceCaption) : null,
+    e('h3', {}, `${J.T[p.kind][0]} ${J.T[p.kind][1]}`),
+    e('p', {}, `→ ${title(c)}`), e('p', {class: 'muted'}, `by ${player(c?.author_id)}`)));
+  return wrap;
+ }
+ const draft=buffer[p.id]||{label:p.label,body:c?.body||'',media_kind:c?.media_kind,media_url:c?.media_url,audio_url:c?.audio_url,video_url:c?.video_url,model_mode:c?.model_mode,model_url:c?.model_url},name=e('input',{value:draft.label||'',maxlength:60,placeholder:'Choice','aria-label':'Choice'}),body=e('textarea',{maxlength:600,placeholder:'I see… I hear… I walk toward…','aria-label':'Narrative Fragment'},draft.body||''),state=e('span',{class:'save-state'},c?'Saved':'Give this card a choice and narrative fragment to save.'),count=e('span',{class:'count'},`${Array.from(body.value).length} / 600`),actions=e('div',{class:'cell-actions'});const media=window.composerMedia(draft,()=>{nextAction();const f=forms.get(p.id);remember(p,f);requestSave(p.id,true);});
+ const f={name,body,media,state,actions,stage,cardId:c?.id,saved:c?JSON.stringify({label:p.label,body:c.body,media_kind:c.media_kind,media_url:c.media_url,audio_url:c.audio_url,video_url:c.video_url,model_mode:c.model_mode,model_url:c.model_url}):null};forms.set(p.id,f);
+ const input=()=>{nextAction();remember(p,f);const label=labels.get(p.id);if(label)label.textContent=name.value||'Write a choice';count.textContent=`${Array.from(body.value).length} / 600`;state.textContent=name.value.trim()&&body.value.trim()?'Saving…':'Give this card a choice and narrative fragment to save.';requestSave(p.id);};name.oninput=input;body.oninput=input;name.onblur=()=>requestSave(p.id,true);body.onblur=()=>requestSave(p.id,true);
+ if (stage < 3) {
+  const onChoose = c ? kind => choose(c.id, kind, sessionPaths(c.id).length > 0) : undefined;
+  actions.append(J.transitionButtons(c, onChoose, stage));
+ }
+ const paper=e('article',{class:`draft-card ${p.kind}`,style:J.suit(p.kind)},e('div',{class:'eyebrow'},sourceCaption ?? 'Stage 2'),e('label',{},'Choice',name),e('label',{},'Narrative Fragment',body),count,media.element,e('div',{class:'save-row'},state),c?optionButtons(c.id):null);wrap.append(paper);if(stage<3)wrap.append(actions);if(c&&f.saved!==JSON.stringify({label:name.value,body:body.value,...media.raw()}))state.textContent='Recovered local changes. Review them before saving.';return wrap;
+}
+window.openSessionEditor=()=>{if(!S.editSession){window.editorActive=false;J.selectMode('board');return;}window.editorActive=true;bufferKey=`jootsy-session:${S.world.slug}:${S.editSession.id}`;try{buffer=JSON.parse(localStorage.getItem(bufferKey)||'{}');}catch{buffer={};}build();};
+function build() {
+ for (const timer of timers.values()) clearTimeout(timer);
+ timers.clear();
+ forms = new Map();
+ labels = new Map();
+ root = e('div', {class: 'session-editor'});
+ const anchor = S.cards.get(S.editSession.anchor_card_id);
+ if (!anchor) {
+  window.editorActive = false;
+  J.selectMode('board');
+  return;
+ }
+ status = e('span', {class: 'session-status', role: 'status'});
+ error = e('div', {class: 'error', role: 'alert'});
+ commitButton = btn('Commit to the board', commit, 'primary', {'aria-label': 'Commit to the board'});
+ const anchorCard = J.face(anchor, {readonly: true, children: optionButtons(anchor.id)});
+ anchorCard.tabIndex = 0;
+ const first = e('section', {class: 'stage stage-one'}, e('h2', {}, '1 · Start here'),
+   e('div', {class: 'anchor-row'}, anchorCard,
+     J.transitionButtons(anchor, kind => choose(anchor.id, kind, sessionPaths(anchor.id).length > 0))));
+ const second = e('section', {class: 'stage stage-two'}, e('h2', {}, '2 · What happens next?'));
+ const third = e('section', {class: 'stage'}, e('h2', {}, '3 · Then what?'));
+ for (const path of sessionPaths(anchor.id)) {
+  second.append(cell(path, 2));
+  if (path.to_card_id && !['wormhole', 'jootsy'].includes(path.kind)) {
+   third.append(...sessionPaths(path.to_card_id).map(next => cell(next, 3)));
+  }
+ }
+ const strip = e('div', {class: 'session-columns'}, first, second, third);
+ root.append(e('div', {class: 'session-toolbar'},
+   e('div', {}, e('strong', {}, 'Your session'), e('p', {}, 'Drafts save automatically. Commit places them on your board.')),
+   e('div', {class: 'row'}, commitButton, btn('Discard session', () => discardConfirm()), status)), strip, error);
+ document.querySelector('#view').replaceChildren(root);
+ updateCommit();
+}
+function snapshot(sourceId){const offered=sessionPaths(sourceId);if(!offered.length)return null;return {kind:offered[0].kind,target:offered[0].to_card_id,children:offered.map(p=>{const c=S.cards.get(p.to_card_id);return c&&!['wormhole','jootsy'].includes(p.kind)?{label:p.label,body:c.body,media_kind:c.media_kind,media_url:c.media_url,audio_url:c.audio_url,video_url:c.video_url,model_mode:c.model_mode,model_url:c.model_url,next:snapshot(c.id)}:null;})};}
+async function apply(sourceId,kind,target,change){await window.flushEditor();const previous=change?snapshot(sourceId):null;await api(`cards/${sourceId}/${change?'cut':'cuts'}`,change?'PUT':'POST',{kind,...(target?{to_card_id:target}:{})});await refresh();if(previous)undoState={sourceId,snapshot:previous};else nextAction();build();const sourceColumn=S.cards.get(sourceId)?.draft?2:1;document.querySelectorAll('.stage')[sourceColumn]?.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});}
+async function choose(sourceId,kind,change){try{await window.flushEditor();if(['wormhole','jootsy'].includes(kind)){picker(S.cards.get(sourceId),kind,target=>apply(sourceId,kind,target,change));return;}await apply(sourceId,kind,null,change);}catch(err){setError(err);}}
+function changePicker(sourceId){const source=S.cards.get(sourceId);J.modal([btn('×',J.closeModal,'close',{'aria-label':'Close'}),e('h2',{},'Change this transition'),J.transitionButtons(source,k=>{J.closeModal();choose(sourceId,k,true);},source.draft?2:1)]);}
+function picker(source,kind,done){const offered=cards().filter(c=>c.id!==source.id&&!c.draft&&!c.deleted),search=e('input',{type:'search','aria-label':'Search cards',placeholder:'Find a card by its choice'}),select=e('select',{size:Math.min(7,Math.max(2,offered.length)),required:true,'aria-label':kind==='jootsy'?'Another branch in your world':'A previous card'}),err=e('p',{class:'error'}),use=btn(kind==='jootsy'?'Jootsy it!':`Use ${J.T[kind][1]}`,async()=>{if(!select.value)return;use.disabled=true;try{await done(select.value);J.closeModal();}catch(ex){err.textContent=ex.message;use.disabled=false;}},'primary wide');const populate=()=>{select.replaceChildren(...offered.filter(c=>`${title(c)} ${player(c.author_id)}`.toLowerCase().includes(search.value.toLowerCase())).map(c=>e('option',{value:c.id},`${title(c)} — ${player(c.author_id)}`)));use.disabled=!select.options.length;};search.oninput=populate;populate();J.modal([btn('×',J.closeModal,'close',{'aria-label':'Close'}),e('h2',{},J.T[kind][1]),kind==='jootsy'?e('p',{},'Find the card you want on the Board first.'):null,search,select,use,err]);}
+window.beginSession=async(c,kind)=>{if(S.editSession){J.modal([btn('×',J.closeModal,'close',{'aria-label':'Close'}),e('h2',{},'You have an open session'),e('p',{},`From ${title(S.cards.get(S.editSession.anchor_card_id))}`),btn('Resume',()=>J.showEditor(),'primary wide'),btn('Discard',()=>discardConfirm(()=>window.beginSession(c,kind)),'wide')]);return;}
+ const start=async target=>{try{await api(`cards/${c.id}/cuts`,'POST',{kind,...(target?{to_card_id:target}:{})});await refresh();J.showEditor();}catch(err){if(err.status===409&&err.anchor_id){await refresh();window.beginSession(c,kind);}else J.toast(err.message);}};if(['wormhole','jootsy'].includes(kind))picker(c,kind,start);else await start();};
+async function restore(sourceId,old){const has=sessionPaths(sourceId).length>0;const r=await api(`cards/${sourceId}/${has?'cut':'cuts'}`,has?'PUT':'POST',{kind:old.kind,...(['wormhole','jootsy'].includes(old.kind)?{to_card_id:old.target}:{})});await refresh();if(['wormhole','jootsy'].includes(old.kind))return;const current=sessionPaths(sourceId);for(let i=0;i<old.children.length;i++){const saved=old.children[i];if(!saved)continue;const p=current[i],value={label:saved.label,body:saved.body,media_kind:saved.media_kind,media_url:saved.media_url,audio_url:saved.audio_url,video_url:saved.video_url,model_mode:saved.model_mode,model_url:saved.model_url};const made=await api(p.to_card_id?`cards/${p.to_card_id}`:'plays',p.to_card_id?'PATCH':'POST',p.to_card_id?value:{path_id:p.id,...value});await refresh();if(saved.next)await restore(made.card.id,saved.next);}}
+async function undo(){const previous=undoState;if(!previous)return;undoState=null;try{await window.flushEditor();await restore(previous.sourceId,previous.snapshot);build();}catch(err){setError(err);}}
+async function commit(){J.startSound();commitButton.disabled=true;try{await window.flushEditor();const result=await api('session/commit','POST',{});localStorage.removeItem(bufferKey);forms.clear();await refresh();undoState=null;root=null;J.afterCommit(result);}catch(err){setError(err);updateCommit();}}
+function discardConfirm(after){J.modal([btn('×',J.closeModal,'close',{'aria-label':'Close'}),e('h2',{},'Discard this session?'),e('p',{},'Its uncommitted cards and links will be removed.'),btn('Discard session',async()=>{try{for(const timer of timers.values())clearTimeout(timer);timers.clear();await queue;await api('session','DELETE');if(bufferKey)localStorage.removeItem(bufferKey);forms.clear();await refresh();window.editorActive=false;root=null;undoState=null;J.closeModal();if(after)after();else J.selectMode('board');}catch(err){setError(err);}},'primary wide'),btn('Keep writing',J.closeModal,'wide')]);}
